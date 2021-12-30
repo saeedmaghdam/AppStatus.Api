@@ -1,7 +1,9 @@
 ﻿using AppStatus.Api.Framework.Services.Account;
 using AppStatus.Api.Framework.Services.Company;
+using AppStatus.Api.Framework.Services.Object;
 using AppStatus.Api.Service.Account;
 using AppStatus.Api.Service.Company;
+using AppStatus.Api.Service.Object;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace AppStatus.Api.Service
@@ -12,6 +14,7 @@ namespace AppStatus.Api.Service
         {
             services.AddScoped<ICompanyService, CompanyService>();
             services.AddScoped<IAccountService, AccountService>();
+            services.AddScoped<IObjectService, ObjectService>();
         }
     }
 }

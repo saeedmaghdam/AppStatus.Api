@@ -1,6 +1,5 @@
 ﻿using AppStatus.Api.Framework;
 using AppStatus.Api.Middlewares;
-using AppStatus.Api.Service;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
