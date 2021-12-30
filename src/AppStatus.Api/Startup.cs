@@ -1,4 +1,8 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using AppStatus.Api.Framework;
+using AppStatus.Api.Middlewares;
+using AppStatus.Api.Service;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,8 +22,15 @@ namespace AppStatus.Api
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            Service.DependencyResolver.Register(services);
+            Shared.DependencyResolver.Register(services);
+
+            services.AddOptions<ApplicationOptions>().Bind(Configuration.GetSection("ApplicationOptions"));
+
             services.AddControllers();
             services.AddSwaggerGen();
+
+            services.AddAuthentication(x => { x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme; }).AddJwtBearer();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -33,10 +44,13 @@ namespace AppStatus.Api
                 app.UseSwaggerUI();
             }
 
+            app.UseMiddleware<ExceptionMiddleware>();
+            app.UseMiddleware<AuthenticatorMiddleware>();
+
             app.UseHttpsRedirection();
 
             app.UseRouting();
-
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.UseSwagger();
