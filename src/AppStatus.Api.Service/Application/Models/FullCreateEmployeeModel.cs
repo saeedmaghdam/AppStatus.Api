@@ -1,20 +1,10 @@
-﻿namespace AppStatus.Api.Domain
+﻿using AppStatus.Api.Framework.Services.Application;
+
+namespace AppStatus.Api.Service.Application.Models
 {
-    public class Employee : BaseEntity
+    public class FullCreateEmployeeModel : IFullCreateEmployee
     {
-        public string CreatorAccountId
-        {
-            get;
-            set;
-        }
-
         public string Name
-        {
-            get;
-            set;
-        }
-
-        public string CompanyId
         {
             get;
             set;

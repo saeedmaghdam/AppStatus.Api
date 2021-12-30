@@ -1,20 +1,8 @@
-﻿namespace AppStatus.Api.Domain
+﻿namespace AppStatus.Api.Controllers.Application.InputModels
 {
-    public class Employee : BaseEntity
+    public class FullCreateEmployeeInputModel
     {
-        public string CreatorAccountId
-        {
-            get;
-            set;
-        }
-
         public string Name
-        {
-            get;
-            set;
-        }
-
-        public string CompanyId
         {
             get;
             set;
