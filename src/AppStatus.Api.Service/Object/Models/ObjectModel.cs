@@ -1,6 +1,8 @@
-﻿namespace AppStatus.Api.Domain
+﻿using AppStatus.Api.Framework.Services.Object;
+
+namespace AppStatus.Api.Service.Object.Models
 {
-    public class Object : BaseEntity
+    public class ObjectModel : Record, IObject
     {
         public string CreatorAccountId
         {
@@ -19,7 +21,7 @@
             get;
             set;
         }
-        
+
         public string Hash
         {
             get;

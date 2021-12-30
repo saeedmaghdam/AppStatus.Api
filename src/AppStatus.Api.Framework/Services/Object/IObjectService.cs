@@ -5,6 +5,8 @@ namespace AppStatus.Api.Framework.Services.Object
 {
     public interface IObjectService
     {
-        Task<string> CreateAsync(string accountId, byte[] content, string hash, CancellationToken cancellationToken);
+        Task<IObject> GetByIdAsync(string accountId, string id, CancellationToken cancellationToken);
+
+        Task<string> CreateAsync(string accountId, byte[] content, string contentType, string hash, CancellationToken cancellationToken);
     }
 }

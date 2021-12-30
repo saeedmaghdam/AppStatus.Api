@@ -1,26 +1,26 @@
-﻿namespace AppStatus.Api.Domain
+﻿namespace AppStatus.Api.Framework.Services.Object
 {
-    public class Object : BaseEntity
+    public interface IObject : IRecord
     {
-        public string CreatorAccountId
+        string CreatorAccountId
         {
             get;
             set;
         }
 
-        public byte[] Content
+        byte[] Content
         {
             get;
             set;
         }
 
-        public string ContentType
+        string ContentType
         {
             get;
             set;
         }
-        
-        public string Hash
+
+        string Hash
         {
             get;
             set;

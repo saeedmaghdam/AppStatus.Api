@@ -42,7 +42,7 @@ namespace AppStatus.Api.Controllers.Object
                     var hashBytes = md5.ComputeHash(fileStream);
                     var hash = BitConverter.ToString(hashBytes).Replace("-", "").ToLowerInvariant();
 
-                    var result = await _objectService.CreateAsync(UserSession.AccountId, bytes, hash, cancellationToken);
+                    var result = await _objectService.CreateAsync(UserSession.AccountId, bytes, model.File.ContentType, hash, cancellationToken);
 
                     return OkData(result);
                 }
@@ -51,6 +51,13 @@ namespace AppStatus.Api.Controllers.Object
             {
                 throw new ValidationException("100", "File is invalid.");
             }
+        }
+
+        [HttpGet("{id}")]
+        public async Task<FileResult> DownloadAsync([FromRoute] string id, CancellationToken cancellationToken)
+        {
+            var fileToRetrieve = await _objectService.GetByIdAsync(UserSession.AccountId, id, cancellationToken);
+            return File(fileToRetrieve.Content, fileToRetrieve.ContentType);
         }
     }
 }
