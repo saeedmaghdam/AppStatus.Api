@@ -1,7 +1,9 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 using AppStatus.Api.Controllers.Account.InputModels;
+using AppStatus.Api.Controllers.Account.ViewModels;
 using AppStatus.Api.Framework.Services.Account;
+using AppStatus.Api.Shared;
 using AppStatus.Api.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 
@@ -18,6 +20,7 @@ namespace AppStatus.Api.Controllers.Account
             _accountService = accountService;
         }
 
+        [Authorize]
         [HttpPost]
         public async Task<ActionResult<ApiResultViewModel<string>>> CreateAsync([FromBody] AccountCreateInputModel model, CancellationToken cancellationToken)
         {
@@ -27,17 +30,23 @@ namespace AppStatus.Api.Controllers.Account
         }
 
         [HttpPost("login")]
-        public async Task<ActionResult<ApiResultViewModel<string>>> LoginAsync([FromBody] AccountLoginInputModel model, CancellationToken cancellationToken)
+        public async Task<ActionResult<ApiResultViewModel<LoginViewModel>>> LoginAsync([FromBody] AccountLoginInputModel model, CancellationToken cancellationToken)
         {
-            var token = await _accountService.LoginAsync(model.Username, model.Password, cancellationToken);
+            var result = await _accountService.LoginAsync(model.Username, model.Password, cancellationToken);
 
-            return OkData(token);
+            return OkData(new LoginViewModel()
+            {
+                Token = result.Token,
+                IsSuccessful = result.IsSuccessful,
+                ExpirationDate = result.ExpirationDate
+            });
         }
 
-        [HttpPost("logout/{token}")]
-        public async Task LogoutAsync([FromRoute] string token, CancellationToken cancellationToken)
+        [Authorize]
+        [HttpPost("logout")]
+        public async Task LogoutAsync(CancellationToken cancellationToken)
         {
-            await _accountService.LogoutAsync(token, cancellationToken);
+            await _accountService.LogoutAsync(UserSession.Token, cancellationToken);
         }
 
         [HttpPost("isAuthenticated/{token}")]

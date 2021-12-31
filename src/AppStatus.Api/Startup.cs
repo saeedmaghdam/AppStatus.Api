@@ -24,6 +24,15 @@ namespace AppStatus.Api
             Service.DependencyResolver.Register(services);
             Shared.DependencyResolver.Register(services);
 
+            services.AddCors(options =>
+            {
+                options.AddDefaultPolicy(
+                    builder =>
+                    {
+                        builder.WithOrigins("https://localhost:4200").AllowAnyMethod().AllowAnyHeader().AllowCredentials();
+                    });
+            });
+
             services.AddOptions<ApplicationOptions>().Bind(Configuration.GetSection("ApplicationOptions"));
 
             services.AddControllers();
@@ -42,6 +51,8 @@ namespace AppStatus.Api
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
+
+            app.UseCors();
 
             app.UseMiddleware<ExceptionMiddleware>();
             app.UseMiddleware<AuthenticatorMiddleware>();

@@ -39,7 +39,7 @@ namespace AppStatus.Api.Service.Account
 
         public async Task<IAccount> GetAccountByToken(string token, CancellationToken cancellationToken)
         {
-            var session = await _sessionCollection.Find(x => x.Token == token).FirstOrDefaultAsync(cancellationToken);
+            var session = await _sessionCollection.Find(x => x.Token == token && x.IsValid).FirstOrDefaultAsync(cancellationToken);
             if (session == null)
                 throw new ValidationException("100", "Token is invalid.");
 
@@ -94,7 +94,7 @@ namespace AppStatus.Api.Service.Account
             return await IMongoCollectionExtensions.Find<Session>(_sessionCollection, x => x.Token == token && x.IsValid).AnyAsync(cancellationToken);
         }
 
-        public async Task<string> LoginAsync(string username, string password, CancellationToken cancellationToken)
+        public async Task<ILogin> LoginAsync(string username, string password, CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(username.Trim()))
                 throw new ValidationException("100", "Username is required.");
@@ -127,7 +127,12 @@ namespace AppStatus.Api.Service.Account
 
             await _sessionCollection.InsertOneAsync(session, new InsertOneOptions(), cancellationToken);
 
-            return session.Token;
+            return new LoginModel()
+            {
+                ExpirationDate = session.ExpirationDate,
+                IsSuccessful = true,
+                Token = session.Token
+            };
         }
 
         public async Task LogoutAsync(string token, CancellationToken cancellationToken)

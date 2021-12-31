@@ -7,7 +7,7 @@ namespace AppStatus.Api.Framework.Services.Account
     {
         Task<IAccount> GetAccountByToken(string token, CancellationToken cancellationToken);
         Task<string> CreateAsync(string accountId, string username, string password, string name, string family, CancellationToken cancellationToken);
-        Task<string> LoginAsync(string username, string password, CancellationToken cancellationToken);
+        Task<ILogin> LoginAsync(string username, string password, CancellationToken cancellationToken);
         Task LogoutAsync(string token, CancellationToken cancellationToken);
         Task<bool> IsAuthenticated(string token, CancellationToken cancellationToken);
     }

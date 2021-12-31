@@ -39,6 +39,7 @@ namespace AppStatus.Api.Middlewares
                 context.Items["UserSession"] = new UserSessionModel()
                 {
                     AccountId = account.Id,
+                    Token = token
                 };
             }
             catch { }
