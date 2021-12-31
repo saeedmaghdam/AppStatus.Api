@@ -9,5 +9,11 @@ namespace AppStatus.Api.Controllers.Object.InputModels
             get;
             set;
         }
+
+        public string MetaData
+        {
+            get;
+            set;
+        }
     }
 }

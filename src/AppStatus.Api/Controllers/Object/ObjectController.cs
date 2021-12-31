@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Threading;
@@ -19,7 +20,7 @@ namespace AppStatus.Api.Controllers.Object
     {
         private readonly IObjectService _objectService;
 
-        private static readonly string[] VALID_FILE_TYPES = { "application/pdf", "image/bmp", "image/jpeg" };
+        private static readonly string[] VALID_FILE_TYPES = { "application/pdf", "image/bmp", "image/png", "image/jpeg" };
 
         public ObjectController(IObjectService objectService)
         {
@@ -37,6 +38,7 @@ namespace AppStatus.Api.Controllers.Object
                 using var fileStream = model.File.OpenReadStream();
                 byte[] bytes = new byte[model.File.Length];
                 fileStream.Read(bytes, 0, (int)model.File.Length);
+                fileStream.Seek(0, SeekOrigin.Begin);
                 using (var md5 = MD5.Create())
                 {
                     var hashBytes = md5.ComputeHash(fileStream);

@@ -16,13 +16,7 @@ namespace AppStatus.Api.Controllers.Application.InputModels
             set;
         }
 
-        public short AppliedFrom
-        {
-            get;
-            set;
-        }
-
-        public string AppliedFromAddress
+        public string ApplySource
         {
             get;
             set;

@@ -46,7 +46,7 @@ namespace AppStatus.Api.Service.Application
                 if (string.IsNullOrEmpty(employee.Name.Trim()))
                     throw new ValidationException("100", "Employee's name is required.");
 
-            if (string.IsNullOrEmpty(model.AppliedFromAddress.Trim()))
+            if (string.IsNullOrEmpty(model.ApplySource.Trim()))
                 throw new ValidationException("100", "Applied from address field is required.");
 
             if (string.IsNullOrEmpty(model.ResumeId.Trim()))
@@ -114,8 +114,7 @@ namespace AppStatus.Api.Service.Application
                 RecordLastEditDate = DateTime.Now,
                 RecordStatus = RecordStatus.Inserted,
                 State = State.Applied,
-                AppliedFrom = model.AppliedFrom,
-                AppliedFromAddress = model.AppliedFromAddress,
+                ApplySource = model.ApplySource,
                 CompanyId = company.Id,
                 CoverLetterId = model.CoverLetterId,
                 CreatorAccountId = model.CoverLetterId,

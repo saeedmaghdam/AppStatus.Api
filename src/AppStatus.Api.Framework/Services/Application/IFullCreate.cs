@@ -16,13 +16,7 @@ namespace AppStatus.Api.Framework.Services.Application
             set;
         }
 
-        short AppliedFrom
-        {
-            get;
-            set;
-        }
-
-        string AppliedFromAddress
+        string ApplySource
         {
             get;
             set;

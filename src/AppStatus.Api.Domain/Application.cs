@@ -20,13 +20,7 @@
             set;
         }
 
-        public short AppliedFrom
-        {
-            get;
-            set;
-        }
-
-        public string AppliedFromAddress
+        public string ApplySource
         {
             get;
             set;

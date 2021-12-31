@@ -27,8 +27,7 @@ namespace AppStatus.Api.Controllers.Application
         {
             var result = await _applicationService.FullCreateAsync(UserSession.AccountId, new FullCreateModel()
             {
-                AppliedFrom = model.AppliedFrom,
-                AppliedFromAddress = model.AppliedFromAddress,
+                ApplySource = model.ApplySource,
                 Company = new FullCreateCompanyModel()
                 {
                     Address = model.Company.Address,

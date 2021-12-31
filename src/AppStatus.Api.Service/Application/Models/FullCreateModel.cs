@@ -17,13 +17,7 @@ namespace AppStatus.Api.Service.Application.Models
             set;
         }
 
-        public short AppliedFrom
-        {
-            get;
-            set;
-        }
-
-        public string AppliedFromAddress
+        public string ApplySource
         {
             get;
             set;
