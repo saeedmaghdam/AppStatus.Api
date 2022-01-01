@@ -313,6 +313,19 @@ namespace AppStatus.Api.Service.Application
             await _applicationCollection.ReplaceOneAsync(filter, application, new ReplaceOptions(), cancellationToken);
         }
 
+        public async Task DeleteAsync(string accountId, string id, CancellationToken cancellationToken)
+        {
+            var filter = Builders<Domain.Application>.Filter.Where(x => x.CreatorAccountId == accountId && x.Id == id && x.RecordStatus != RecordStatus.Deleted);
+            var application = await _applicationCollection.Find(filter).FirstOrDefaultAsync(cancellationToken);
+            if (application == null)
+                throw new ValidationException("100", "Application not found.");
+
+            application.RecordStatus = RecordStatus.Deleted;
+            application.RecordLastEditDate = DateTime.Now;
+
+            await _applicationCollection.ReplaceOneAsync(filter, application, new ReplaceOptions(), cancellationToken);
+        }
+
         public static IEnumerable<IApplication> ToModel(IEnumerable<Domain.Application> applications, IEnumerable<Domain.Company> companies = null, IEnumerable<Domain.Employee> employees = null)
         {
             return applications.Select(application => new ApplicationModel()

@@ -122,5 +122,11 @@ namespace AppStatus.Api.Controllers.Application
         {
             await _applicationService.PatchStateAsync(UserSession.AccountId, id, model.StateId, model.LogMessage, cancellationToken);
         }
+
+        [HttpDelete("{id}")]
+        public async Task DeleteAsync([FromRoute] string id, CancellationToken cancellationToken)
+        {
+            await _applicationService.DeleteAsync(UserSession.AccountId, id, cancellationToken);
+        }
     }
 }
