@@ -1,52 +1,52 @@
-﻿using System.Collections.Generic;
+﻿using AppStatus.Api.Framework.Services.Employee;
 
-namespace AppStatus.Api.Controllers.Application.InputModels
+namespace AppStatus.Api.Service.Employee.Models
 {
-    public class FullCreateInputModel
+    public class EmployeeModel : Record, IEmployee
     {
-        public string JobTitle
+        public string CreatorAccountId
         {
             get;
             set;
         }
 
-        public string Salary
+        public string Name
         {
             get;
             set;
         }
 
-        public FullCreateCompanyInputModel Company
+        public short RoleId
         {
             get;
             set;
         }
 
-        public IEnumerable<FullCreateEmployeeInputModel> Employees
+        public string Role
         {
             get;
             set;
         }
 
-        public short StateId
+        public string PhoneNumber
         {
             get;
             set;
         }
 
-        public string ApplySource
+        public string Email
         {
             get;
             set;
         }
 
-        public string ResumeId
+        public string ProfileUrl
         {
             get;
             set;
         }
 
-        public string CoverLetterId
+        public string PictureId
         {
             get;
             set;

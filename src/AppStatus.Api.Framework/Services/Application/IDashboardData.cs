@@ -2,51 +2,48 @@
 
 namespace AppStatus.Api.Framework.Services.Application
 {
-    public interface IFullCreate
+    public interface IDashboardData
     {
-        string JobTitle
+        IDashboardDataItem Wishlist
         {
             get;
             set;
         }
 
-        string Salary
+        IDashboardDataItem Applied
         {
             get;
             set;
         }
 
-        IFullCreateCompany Company
+        IDashboardDataItem Interview
         {
             get;
             set;
         }
 
-        IEnumerable<IFullCreateEmployee> Employees
+        IDashboardDataItem Offer
         {
             get;
             set;
         }
 
-        short StateId
+        IDashboardDataItem Rejected
+        {
+            get;
+            set;
+        }
+    }
+
+    public interface IDashboardDataItem
+    {
+        IEnumerable<IApplication> Applications
         {
             get;
             set;
         }
 
-        string ApplySource
-        {
-            get;
-            set;
-        }
-
-        string ResumeId
-        {
-            get;
-            set;
-        }
-
-        string CoverLetterId
+        long TotalApplications
         {
             get;
             set;

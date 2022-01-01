@@ -1,10 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using AppStatus.Api.Framework;
 using AppStatus.Api.Framework.Constants;
 using AppStatus.Api.Framework.Exceptions;
 using AppStatus.Api.Framework.Services.Application;
+using AppStatus.Api.Service.Application.Models;
+using AppStatus.Api.Service.Company;
+using AppStatus.Api.Service.Employee;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 
@@ -12,6 +17,8 @@ namespace AppStatus.Api.Service.Application
 {
     public class ApplicationService : IApplicationService
     {
+        private readonly IOptionsMonitor<ApplicationOptions> _options;
+
         private readonly IMongoCollection<Domain.Application> _applicationCollection;
         private readonly IMongoCollection<Domain.Company> _companyCollection;
         private readonly IMongoCollection<Domain.Employee> _employeeCollection;
@@ -22,6 +29,8 @@ namespace AppStatus.Api.Service.Application
 
         public ApplicationService(IOptionsMonitor<ApplicationOptions> options)
         {
+            _options = options;
+
             _mongoClient = new MongoClient(
             options.CurrentValue.ConnectionString);
 
@@ -110,14 +119,16 @@ namespace AppStatus.Api.Service.Application
 
             var application = new Domain.Application()
             {
+                JobTitle = model.JobTitle,
+                Salary = model.Salary,
                 RecordInsertDate = DateTime.Now,
                 RecordLastEditDate = DateTime.Now,
                 RecordStatus = RecordStatus.Inserted,
-                State = State.Applied,
+                StateId = model.StateId,
                 ApplySource = model.ApplySource,
                 CompanyId = company.Id,
                 CoverLetterId = model.CoverLetterId,
-                CreatorAccountId = model.CoverLetterId,
+                CreatorAccountId = accountId,
                 ResumeId = model.ResumeId,
                 History = new[] { "Applied." }
             };
@@ -125,6 +136,90 @@ namespace AppStatus.Api.Service.Application
             await _applicationCollection.InsertOneAsync(application, new InsertOneOptions(), cancellationToken);
 
             return application.Id;
+        }
+
+        public async Task<IDashboardData> GetDashboardDataAsync(string accountId, CancellationToken cancellationToken)
+        {
+            var wishlistQuery = Builders<Domain.Application>.Filter.Where(x => x.StateId == State.Wishlist && x.CreatorAccountId == accountId && x.RecordStatus != RecordStatus.Deleted);
+            var wishlist = await _applicationCollection.Find(wishlistQuery).Limit(_options.CurrentValue.MaximumItemsInDashboard).ToListAsync(cancellationToken);
+            var totalWishlistCount = await _applicationCollection.Find(wishlistQuery).CountDocumentsAsync(cancellationToken);
+
+            var appliedQuery = Builders<Domain.Application>.Filter.Where(x => x.StateId == State.Applied && x.CreatorAccountId == accountId && x.RecordStatus != RecordStatus.Deleted);
+            var applied = await _applicationCollection.Find(appliedQuery).Limit(_options.CurrentValue.MaximumItemsInDashboard).ToListAsync(cancellationToken);
+            var totalAppliedCount = await _applicationCollection.Find(appliedQuery).CountDocumentsAsync(cancellationToken);
+
+            var interviewQuery = Builders<Domain.Application>.Filter.Where(x => x.StateId == State.Interview && x.CreatorAccountId == accountId && x.RecordStatus != RecordStatus.Deleted);
+            var interview = await _applicationCollection.Find(interviewQuery).Limit(_options.CurrentValue.MaximumItemsInDashboard).ToListAsync(cancellationToken);
+            var totalInterviewCount = await _applicationCollection.Find(interviewQuery).CountDocumentsAsync(cancellationToken);
+
+            var offerQuery = Builders<Domain.Application>.Filter.Where(x => x.StateId == State.Offer && x.CreatorAccountId == accountId && x.RecordStatus != RecordStatus.Deleted);
+            var offer = await _applicationCollection.Find(offerQuery).Limit(_options.CurrentValue.MaximumItemsInDashboard).ToListAsync(cancellationToken);
+            var totalOfferCount = await _applicationCollection.Find(offerQuery).CountDocumentsAsync(cancellationToken);
+
+            var rejectedQuery = Builders<Domain.Application>.Filter.Where(x => x.StateId == State.Offer && x.CreatorAccountId == accountId && x.RecordStatus != RecordStatus.Deleted);
+            var rejected = await _applicationCollection.Find(rejectedQuery).Limit(_options.CurrentValue.MaximumItemsInDashboard).ToListAsync(cancellationToken);
+            var totalRejectedCount = await _applicationCollection.Find(rejectedQuery).CountDocumentsAsync(cancellationToken);
+
+            var companyIds = wishlist.Select(x => x.CompanyId)
+                .Union(applied.Select(x => x.CompanyId))
+                .Union(interview.Select(x => x.CompanyId))
+                .Union(offer.Select(x => x.CompanyId))
+                .Union(rejected.Select(x => x.CompanyId));
+
+            var companies = await _companyCollection.Find(x => companyIds.Contains(x.Id)).ToListAsync(cancellationToken);
+            var employees = await _employeeCollection.Find(x => companyIds.Contains(x.CompanyId)).ToListAsync(cancellationToken);
+
+            var result = new DashboardDataModel()
+            {
+                Wishlist = new DashboardDataItemModel()
+                {
+                    Applications = ToModel(wishlist, companies, employees),
+                    TotalApplications = totalWishlistCount
+                },
+                Applied = new DashboardDataItemModel()
+                {
+                    Applications = ToModel(applied, companies, employees),
+                    TotalApplications = totalAppliedCount
+                },
+                Interview = new DashboardDataItemModel()
+                {
+                    Applications = ToModel(interview, companies, employees),
+                    TotalApplications = totalInterviewCount
+                },
+                Offer = new DashboardDataItemModel()
+                {
+                    Applications = ToModel(offer, companies, employees),
+                    TotalApplications = totalOfferCount
+                },
+                Rejected = new DashboardDataItemModel()
+                {
+                    Applications = ToModel(rejected, companies, employees),
+                    TotalApplications = totalRejectedCount
+                }
+            };
+
+            return result;
+        }
+
+        public static IEnumerable<IApplication> ToModel(IEnumerable<Domain.Application> applications, IEnumerable<Domain.Company> companies = null, IEnumerable<Domain.Employee> employees = null)
+        {
+            return applications.Select(application => new ApplicationModel()
+            {
+                JobTitle = application.JobTitle,
+                Salary = application.Salary,
+                Company = companies == null ? null : CompanyService.ToModel(companies.Where(company => application.CompanyId == company.Id)).FirstOrDefault(),
+                Employees = employees == null ? null : EmployeeService.ToModel(employees.Where(employee => employee.CompanyId == application.CompanyId)),
+                ApplySource = application.ApplySource,
+                CoverLetterId = application.CoverLetterId,
+                History = application.History,
+                Id = application.Id,
+                RecordInsertDate = application.RecordInsertDate,
+                RecordLastEditDate = application.RecordLastEditDate,
+                RecordStatus = application.RecordStatus,
+                ResumeId = application.ResumeId,
+                State = State.ToString(application.StateId),
+                StateId = application.StateId
+            });
         }
     }
 }

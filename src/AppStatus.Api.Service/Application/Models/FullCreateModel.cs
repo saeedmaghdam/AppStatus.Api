@@ -5,6 +5,18 @@ namespace AppStatus.Api.Service.Application.Models
 {
     public class FullCreateModel : IFullCreate
     {
+        public string JobTitle
+        {
+            get;
+            set;
+        }
+
+        public string Salary
+        {
+            get;
+            set;
+        }
+
         public IFullCreateCompany Company
         {
             get;
@@ -12,6 +24,12 @@ namespace AppStatus.Api.Service.Application.Models
         }
 
         public IEnumerable<IFullCreateEmployee> Employees
+        {
+            get;
+            set;
+        }
+
+        public short StateId
         {
             get;
             set;

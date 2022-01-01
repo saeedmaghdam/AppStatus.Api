@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using AppStatus.Api.Controllers.Application.InputModels;
+using AppStatus.Api.Controllers.Application.ViewModels;
 using AppStatus.Api.Framework.Services.Application;
 using AppStatus.Api.Service.Application.Models;
 using AppStatus.Api.Shared;
@@ -27,6 +28,8 @@ namespace AppStatus.Api.Controllers.Application
         {
             var result = await _applicationService.FullCreateAsync(UserSession.AccountId, new FullCreateModel()
             {
+                JobTitle = model.JobTitle,
+                Salary = model.Salary,
                 ApplySource = model.ApplySource,
                 Company = new FullCreateCompanyModel()
                 {
@@ -46,10 +49,46 @@ namespace AppStatus.Api.Controllers.Application
                     PictureId = x.PictureId,
                     ProfileUrl = x.ProfileUrl,
                     RoleId = x.RoleId
-                })
+                }),
+                StateId = model.StateId
             }, cancellationToken);
 
             return OkData(result);
+        }
+
+        [HttpGet("dashboardData")]
+        public async Task<ActionResult<ApiResultViewModel<DashboardDataViewModel>>> GetDashboardDataAsync(CancellationToken cancellationToken)
+        {
+            var result = await _applicationService.GetDashboardDataAsync(UserSession.AccountId, cancellationToken);
+
+            return OkData(new DashboardDataViewModel()
+            {
+                Wishlist = new DashboardDataItemViewModel()
+                {
+                    Applications = ApplicationViewModel.ToViewModel(result.Wishlist.Applications),
+                    TotalApplications = result.Wishlist.TotalApplications
+                },
+                Applied = new DashboardDataItemViewModel()
+                {
+                    Applications = ApplicationViewModel.ToViewModel(result.Applied.Applications),
+                    TotalApplications = result.Applied.TotalApplications
+                },
+                Interview = new DashboardDataItemViewModel()
+                {
+                    Applications = ApplicationViewModel.ToViewModel(result.Interview.Applications),
+                    TotalApplications = result.Interview.TotalApplications
+                },
+                Offer = new DashboardDataItemViewModel()
+                {
+                    Applications = ApplicationViewModel.ToViewModel(result.Offer.Applications),
+                    TotalApplications = result.Offer.TotalApplications
+                },
+                Rejected = new DashboardDataItemViewModel()
+                {
+                    Applications = ApplicationViewModel.ToViewModel(result.Rejected.Applications),
+                    TotalApplications = result.Rejected.TotalApplications
+                },
+            });
         }
     }
 }

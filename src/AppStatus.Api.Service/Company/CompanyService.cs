@@ -33,6 +33,13 @@ namespace AppStatus.Api.Service.Company
             return ToModel(result);
         }
 
+        public async Task<IEnumerable<ICompany>> GetByIdsAsync(string accountId, string[] ids, CancellationToken cancellationToken)
+        {
+            var result = await _companyCollection.Find(x=> x.CreatorAccountId == accountId && ids.Contains(x.Id) && x.RecordStatus != RecordStatus.Deleted).ToListAsync(cancellationToken);
+
+            return ToModel(result);
+        }
+
         public async Task<string> CreateAsync(string accountId, string name, string url, string[] emails, string[] phoneNumbers, string address, CancellationToken cancellationToken)
         {
             var company = new Domain.Company()

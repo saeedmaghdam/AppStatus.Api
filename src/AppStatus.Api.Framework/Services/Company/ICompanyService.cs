@@ -8,6 +8,8 @@ namespace AppStatus.Api.Framework.Services.Company
     {
         Task<IEnumerable<ICompany>> GetAsync(CancellationToken cancellationToken);
 
+        Task<IEnumerable<ICompany>> GetByIdsAsync(string accountId, string[] companyIds, CancellationToken cancellationToken);
+
         Task<string> CreateAsync(string accountId, string name, string url, string[] emails, string[] phoneNumbers, string address, CancellationToken cancellationToken);
     }
 }

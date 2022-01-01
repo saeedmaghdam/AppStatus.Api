@@ -1,52 +1,50 @@
-﻿using System.Collections.Generic;
-
-namespace AppStatus.Api.Controllers.Application.InputModels
+﻿namespace AppStatus.Api.Framework.Services.Employee
 {
-    public class FullCreateInputModel
+    public interface IEmployee : IRecord
     {
-        public string JobTitle
+        string CreatorAccountId
         {
             get;
             set;
         }
 
-        public string Salary
+        string Name
         {
             get;
             set;
         }
 
-        public FullCreateCompanyInputModel Company
+        short RoleId
         {
             get;
             set;
         }
 
-        public IEnumerable<FullCreateEmployeeInputModel> Employees
+        string Role
         {
             get;
             set;
         }
 
-        public short StateId
+        string PhoneNumber
         {
             get;
             set;
         }
 
-        public string ApplySource
+        string Email
         {
             get;
             set;
         }
 
-        public string ResumeId
+        string ProfileUrl
         {
             get;
             set;
         }
 
-        public string CoverLetterId
+        string PictureId
         {
             get;
             set;

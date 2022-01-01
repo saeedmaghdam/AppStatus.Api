@@ -28,19 +28,7 @@ namespace AppStatus.Api.Controllers.Company
         {
             var result = await _companyService.GetAsync(cancellationToken);
 
-            return OkData(result.Select(x => new CompanyViewModel()
-            {
-                Url = x.Url,
-                RecordStatus = x.RecordStatus,
-                RecordLastEditDate = x.RecordLastEditDate,
-                Address = x.Address,
-                CreatorAccountId = x.CreatorAccountId,
-                Emails = x.Emails,
-                Id = x.Id,
-                Name = x.Name,
-                PhoneNumbers = x.PhoneNumbers,
-                RecordInsertDate = x.RecordInsertDate
-            }));
+            return OkData(CompanyViewModel.ToViewModel(result));
         }
 
         [HttpPost]

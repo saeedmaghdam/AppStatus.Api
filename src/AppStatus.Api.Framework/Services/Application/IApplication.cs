@@ -1,34 +1,42 @@
 ﻿using System.Collections.Generic;
+using AppStatus.Api.Framework.Services.Company;
+using AppStatus.Api.Framework.Services.Employee;
 
-namespace AppStatus.Api.Controllers.Application.InputModels
+namespace AppStatus.Api.Framework.Services.Application
 {
-    public class FullCreateInputModel
+    public interface IApplication : IRecord
     {
-        public string JobTitle
+        string JobTitle
         {
             get;
             set;
         }
 
-        public string Salary
+        string Salary
         {
             get;
             set;
         }
 
-        public FullCreateCompanyInputModel Company
+        ICompany Company
         {
             get;
             set;
         }
 
-        public IEnumerable<FullCreateEmployeeInputModel> Employees
+        IEnumerable<IEmployee> Employees
         {
             get;
             set;
         }
 
         public short StateId
+        {
+            get;
+            set;
+        }
+
+        public string State
         {
             get;
             set;
@@ -47,6 +55,12 @@ namespace AppStatus.Api.Controllers.Application.InputModels
         }
 
         public string CoverLetterId
+        {
+            get;
+            set;
+        }
+
+        public string[] History
         {
             get;
             set;

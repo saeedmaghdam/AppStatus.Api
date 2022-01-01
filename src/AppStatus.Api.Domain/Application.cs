@@ -2,6 +2,18 @@
 {
     public class Application : BaseEntity
     {
+        public string JobTitle
+        {
+            get;
+            set;
+        }
+
+        public string Salary
+        {
+            get;
+            set;
+        }
+
         public string CreatorAccountId
         {
             get;
@@ -14,7 +26,7 @@
             set;
         }
 
-        public short State
+        public short StateId
         {
             get;
             set;

@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using AppStatus.Api.Framework.Services.Company;
 
 namespace AppStatus.Api.Controllers.Company.ViewModels
 {
@@ -62,6 +65,23 @@ namespace AppStatus.Api.Controllers.Company.ViewModels
         {
             get;
             set;
+        }
+
+        public static IEnumerable<CompanyViewModel> ToViewModel(IEnumerable<ICompany> companies)
+        {
+            return companies.Select(x => new CompanyViewModel()
+            {
+                Address = x.Address,
+                CreatorAccountId = x.CreatorAccountId,
+                Emails = x.Emails,
+                Id = x.Id,
+                Name = x.Name,
+                PhoneNumbers = x.PhoneNumbers,
+                RecordInsertDate = x.RecordInsertDate,
+                RecordLastEditDate = x.RecordLastEditDate,
+                RecordStatus = x.RecordStatus,
+                Url = x.Url
+            });
         }
     }
 }
