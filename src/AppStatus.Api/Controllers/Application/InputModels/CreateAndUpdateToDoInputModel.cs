@@ -1,14 +1,14 @@
 ﻿namespace AppStatus.Api.Controllers.Application.InputModels
 {
-    public class PathStateInputModel
+    public class CreateAndUpdateToDoInputModel
     {
-        public short StateId
+        public string Title
         {
             get;
             set;
         }
 
-        public string LogMessage
+        public string[] ToDoIds
         {
             get;
             set;

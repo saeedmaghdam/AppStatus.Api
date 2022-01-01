@@ -102,7 +102,7 @@ namespace AppStatus.Api.Controllers.Application
         [HttpPatch("{id}/toDoStatus")]
         public async Task PatchToDoStatusAsync([FromRoute] string id, [FromBody] PatchTodoStatusInputModel model, CancellationToken cancellationToken)
         {
-            await _applicationService.PatchTodoStatusAsync(UserSession.AccountId, id, model.ToDoIds, cancellationToken);
+            await _applicationService.PatchToDoStatusAsync(UserSession.AccountId, id, model.ToDoIds, cancellationToken);
         }
 
         [HttpPost("{id}/toDo")]
@@ -111,10 +111,16 @@ namespace AppStatus.Api.Controllers.Application
             await _applicationService.CreateToDoAsync(UserSession.AccountId, id, model.Title, cancellationToken);
         }
 
+        [HttpPost("{id}/createAndPatchToDo")]
+        public async Task CreateAndPatchToDoStatusAsync([FromRoute] string id, [FromBody] CreateAndUpdateToDoInputModel model, CancellationToken cancellationToken)
+        {
+            await _applicationService.CreateAndPatchToDoAsync(UserSession.AccountId, id, model.Title, model.ToDoIds, cancellationToken);
+        }
+
         [HttpPatch("{id}/state")]
         public async Task PatchStateAsync([FromRoute] string id, [FromBody] PathStateInputModel model, CancellationToken cancellationToken)
         {
-            await _applicationService.PatchStateAsync(UserSession.AccountId, id, model.StateId, cancellationToken);
+            await _applicationService.PatchStateAsync(UserSession.AccountId, id, model.StateId, model.LogMessage, cancellationToken);
         }
     }
 }

@@ -130,7 +130,7 @@ namespace AppStatus.Api.Service.Application
                 CoverLetterId = model.CoverLetterId,
                 CreatorAccountId = accountId,
                 ResumeId = model.ResumeId,
-                History =  new List<Domain.ApplicationHistoryItem>() { new Domain.ApplicationHistoryItem() { Description = "Applied", RecordInsertDate = DateTime.Now } },
+                History = new List<Domain.ApplicationHistoryItem>() { new Domain.ApplicationHistoryItem() { Description = State.ToString(model.StateId), RecordInsertDate = DateTime.Now } },
                 ToDo = model.ToDo == null ? new List<Domain.ApplicationToDoItem>() : model.ToDo.Select(x => new Domain.ApplicationToDoItem()
                 {
                     Title = x,
@@ -219,16 +219,16 @@ namespace AppStatus.Api.Service.Application
             await _applicationCollection.ReplaceOneAsync(filter, application, new ReplaceOptions(), cancellationToken);
         }
 
-        public async Task PatchTodoStatusAsync(string accountId, string id, string[] todoIds, CancellationToken cancellationToken)
+        public async Task PatchToDoStatusAsync(string accountId, string id, string[] toDoIds, CancellationToken cancellationToken)
         {
             var filter = Builders<Domain.Application>.Filter.Where(x => x.CreatorAccountId == accountId && x.Id == id && x.RecordStatus != RecordStatus.Deleted);
             var application = await _applicationCollection.Find(filter).FirstOrDefaultAsync(cancellationToken);
             if (application == null)
                 throw new ValidationException("100", "Application not found.");
 
-            foreach(var item in application.ToDo)
+            foreach (var item in application.ToDo)
             {
-                if (todoIds.Contains(item.Id))
+                if (toDoIds.Contains(item.Id))
                     item.IsDone = !item.IsDone;
             }
 
@@ -255,12 +255,58 @@ namespace AppStatus.Api.Service.Application
             await _applicationCollection.ReplaceOneAsync(filter, application, new ReplaceOptions(), cancellationToken);
         }
 
-        public async Task PatchStateAsync(string accountId, string id, short stateId, CancellationToken cancellationToken)
+        public async Task CreateAndPatchToDoAsync(string accountId, string id, string title, string[] toDoIds, CancellationToken cancellationToken)
         {
             var filter = Builders<Domain.Application>.Filter.Where(x => x.CreatorAccountId == accountId && x.Id == id && x.RecordStatus != RecordStatus.Deleted);
             var application = await _applicationCollection.Find(filter).FirstOrDefaultAsync(cancellationToken);
             if (application == null)
                 throw new ValidationException("100", "Application not found.");
+
+            if (application.ToDo == null)
+                application.ToDo = new List<Domain.ApplicationToDoItem>();
+
+            if (application.ToDo.Count > 0)
+            {
+                foreach (var item in application.ToDo)
+                {
+                    if (toDoIds.Contains(item.Id))
+                        item.IsDone = !item.IsDone;
+                }
+            }
+
+            if (title != null && !string.IsNullOrEmpty(title.Trim()))
+            {
+                application.ToDo.Add(new Domain.ApplicationToDoItem()
+                {
+                    Title = title,
+                    IsDone = false,
+                    RecordInsertDate = DateTime.Now
+                });
+            }
+
+            await _applicationCollection.ReplaceOneAsync(filter, application, new ReplaceOptions(), cancellationToken);
+        }
+
+        public async Task PatchStateAsync(string accountId, string id, short stateId, string logMessage, CancellationToken cancellationToken)
+        {
+            var filter = Builders<Domain.Application>.Filter.Where(x => x.CreatorAccountId == accountId && x.Id == id && x.RecordStatus != RecordStatus.Deleted);
+            var application = await _applicationCollection.Find(filter).FirstOrDefaultAsync(cancellationToken);
+            if (application == null)
+                throw new ValidationException("100", "Application not found.");
+
+            var newLogMessage = new List<string>();
+
+            if (stateId != application.StateId)
+                newLogMessage.Add(State.ToString(stateId));
+
+            if (!string.IsNullOrEmpty(logMessage))
+                newLogMessage.Add(logMessage);
+
+            application.History.Add(new Domain.ApplicationHistoryItem()
+            {
+                Description = string.Join(" - ", newLogMessage),
+                RecordInsertDate = DateTime.Now
+            });
 
             application.StateId = stateId;
 
@@ -284,7 +330,7 @@ namespace AppStatus.Api.Service.Application
                 ResumeId = application.ResumeId,
                 State = State.ToString(application.StateId),
                 StateId = application.StateId,
-                History = application.History == null ? null : application.History.OrderByDescending(x=>x.RecordInsertDate).Select(x => new ApplicationHistoryItemModel()
+                History = application.History == null ? null : application.History.OrderByDescending(x => x.RecordInsertDate).Select(x => new ApplicationHistoryItemModel()
                 {
                     RecordInsertDate = x.RecordInsertDate,
                     Description = x.Description,
