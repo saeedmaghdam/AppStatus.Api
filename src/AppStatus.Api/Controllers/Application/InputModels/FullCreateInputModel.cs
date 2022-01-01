@@ -51,5 +51,17 @@ namespace AppStatus.Api.Controllers.Application.InputModels
             get;
             set;
         }
+
+        public IEnumerable<string> ToDo
+        {
+            get;
+            set;
+        }
+
+        public string Notes
+        {
+            get;
+            set;
+        }
     }
 }

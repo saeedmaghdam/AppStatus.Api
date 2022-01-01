@@ -52,5 +52,17 @@ namespace AppStatus.Api.Service.Application.Models
             get;
             set;
         }
+
+        public string[] ToDo
+        {
+            get;
+            set;
+        }
+
+        public string Notes
+        {
+            get;
+            set;
+        }
     }
 }

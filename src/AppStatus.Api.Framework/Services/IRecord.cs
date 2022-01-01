@@ -2,14 +2,8 @@
 
 namespace AppStatus.Api.Framework.Services
 {
-    public interface IRecord
+    public interface IRecord : IIdentify
     {
-        string Id
-        {
-            get;
-            set;
-        }
-
         short RecordStatus
         {
             get;

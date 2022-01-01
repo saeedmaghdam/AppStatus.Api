@@ -51,5 +51,17 @@ namespace AppStatus.Api.Framework.Services.Application
             get;
             set;
         }
+
+        string[] ToDo
+        {
+            get;
+            set;
+        }
+
+        string Notes
+        {
+            get;
+            set;
+        }
     }
 }

@@ -3,7 +3,7 @@ using AppStatus.Api.Framework.Services;
 
 namespace AppStatus.Api.Service
 {
-    public class Record : IRecord
+    public class Record : Idendity, IRecord
     {
         public string Id
         {

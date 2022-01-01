@@ -1,4 +1,6 @@
-﻿namespace AppStatus.Api.Domain
+﻿using System;
+
+namespace AppStatus.Api.Domain
 {
     public class Application : BaseEntity
     {
@@ -50,7 +52,55 @@
             set;
         }
 
-        public string[] History
+        public ApplicationHistoryItem[] History
+        {
+            get;
+            set;
+        }
+
+        public ApplicationToDoItem[] ToDo
+        {
+            get;
+            set;
+        }
+
+        public string Notes
+        {
+            get;
+            set;
+        }
+    }
+
+    public class ApplicationHistoryItem : Identify
+    {
+        public DateTime RecordInsertDate
+        {
+            get;
+            set;
+        }
+
+        public string Description
+        {
+            get;
+            set;
+        }
+    }
+
+    public class ApplicationToDoItem : Identify
+    {
+        public DateTime RecordInsertDate
+        {
+            get;
+            set;
+        }
+
+        public string Title
+        {
+            get;
+            set;
+        }
+
+        public bool IsDone
         {
             get;
             set;

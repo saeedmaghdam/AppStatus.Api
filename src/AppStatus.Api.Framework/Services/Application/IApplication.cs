@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using AppStatus.Api.Framework.Services.Company;
 using AppStatus.Api.Framework.Services.Employee;
 
@@ -36,31 +37,79 @@ namespace AppStatus.Api.Framework.Services.Application
             set;
         }
 
-        public string State
+        string State
         {
             get;
             set;
         }
 
-        public string ApplySource
+        string ApplySource
         {
             get;
             set;
         }
 
-        public string ResumeId
+        string ResumeId
         {
             get;
             set;
         }
 
-        public string CoverLetterId
+        string CoverLetterId
         {
             get;
             set;
         }
 
-        public string[] History
+        IEnumerable<IApplicationHistoryItem> History
+        {
+            get;
+            set;
+        }
+
+        IEnumerable<IApplicationToDoItem> ToDo
+        {
+            get;
+            set;
+        }
+
+        string Notes
+        {
+            get;
+            set;
+        }
+    }
+
+    public interface IApplicationHistoryItem : IIdentify
+    {
+        public DateTime RecordInsertDate
+        {
+            get;
+            set;
+        }
+
+        public string Description
+        {
+            get;
+            set;
+        }
+    }
+
+    public interface IApplicationToDoItem : IIdentify
+    {
+        public DateTime RecordInsertDate
+        {
+            get;
+            set;
+        }
+
+        public string Title
+        {
+            get;
+            set;
+        }
+
+        public bool IsDone
         {
             get;
             set;

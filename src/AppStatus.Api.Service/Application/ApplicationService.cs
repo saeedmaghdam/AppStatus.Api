@@ -130,7 +130,13 @@ namespace AppStatus.Api.Service.Application
                 CoverLetterId = model.CoverLetterId,
                 CreatorAccountId = accountId,
                 ResumeId = model.ResumeId,
-                History = new[] { "Applied." }
+                History = new[] { new Domain.ApplicationHistoryItem() { Description = "Applied", RecordInsertDate = DateTime.Now } },
+                ToDo = model.ToDo == null ? new List<Domain.ApplicationToDoItem>().ToArray() : model.ToDo.Select(x => new Domain.ApplicationToDoItem()
+                {
+                    Title = x,
+                    RecordInsertDate = DateTime.Now
+                }).ToArray(),
+                Notes = model.Notes
             };
 
             await _applicationCollection.InsertOneAsync(application, new InsertOneOptions(), cancellationToken);
@@ -201,6 +207,18 @@ namespace AppStatus.Api.Service.Application
             return result;
         }
 
+        public async Task PatchNotesAsync(string accountId, string id, string notes, CancellationToken cancellationToken)
+        {
+            var filter = Builders<Domain.Application>.Filter.Where(x => x.CreatorAccountId == accountId && x.Id == id && x.RecordStatus != RecordStatus.Deleted);
+            var application = await _applicationCollection.Find(filter).FirstOrDefaultAsync(cancellationToken);
+            if (application == null)
+                throw new ValidationException("100", "Application not found.");
+
+            application.Notes = notes;
+
+            await _applicationCollection.ReplaceOneAsync(filter, application, new ReplaceOptions(), cancellationToken);
+        }
+
         public static IEnumerable<IApplication> ToModel(IEnumerable<Domain.Application> applications, IEnumerable<Domain.Company> companies = null, IEnumerable<Domain.Employee> employees = null)
         {
             return applications.Select(application => new ApplicationModel()
@@ -211,14 +229,27 @@ namespace AppStatus.Api.Service.Application
                 Employees = employees == null ? null : EmployeeService.ToModel(employees.Where(employee => employee.CompanyId == application.CompanyId)),
                 ApplySource = application.ApplySource,
                 CoverLetterId = application.CoverLetterId,
-                History = application.History,
                 Id = application.Id,
                 RecordInsertDate = application.RecordInsertDate,
                 RecordLastEditDate = application.RecordLastEditDate,
                 RecordStatus = application.RecordStatus,
                 ResumeId = application.ResumeId,
                 State = State.ToString(application.StateId),
-                StateId = application.StateId
+                StateId = application.StateId,
+                History = application.History == null ? null : application.History.Select(x => new ApplicationHistoryItemModel()
+                {
+                    RecordInsertDate = x.RecordInsertDate,
+                    Description = x.Description,
+                    Id = x.Id
+                }),
+                ToDo = application.ToDo == null ? null : application.ToDo.OrderBy(x => x.RecordInsertDate).ThenBy(x => x.IsDone).Select(x => new ApplicationToDoItemModel()
+                {
+                    Id = x.Id,
+                    IsDone = x.IsDone,
+                    RecordInsertDate = x.RecordInsertDate,
+                    Title = x.Title
+                }),
+                Notes = application.Notes
             });
         }
     }

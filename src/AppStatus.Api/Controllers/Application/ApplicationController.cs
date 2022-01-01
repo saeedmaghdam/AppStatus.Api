@@ -50,7 +50,9 @@ namespace AppStatus.Api.Controllers.Application
                     ProfileUrl = x.ProfileUrl,
                     RoleId = x.RoleId
                 }),
-                StateId = model.StateId
+                StateId = model.StateId,
+                ToDo = model.ToDo.ToArray(),
+                Notes = model.Notes
             }, cancellationToken);
 
             return OkData(result);
@@ -89,6 +91,12 @@ namespace AppStatus.Api.Controllers.Application
                     TotalApplications = result.Rejected.TotalApplications
                 },
             });
+        }
+
+        [HttpPatch("{id}/notes")]
+        public async Task PatchNotesAsync([FromRoute] string id, [FromBody] PathNotesViewModel model, CancellationToken cancellationToken)
+        {
+            await _applicationService.PatchNotesAsync(UserSession.AccountId, id, model.Notes, cancellationToken);
         }
     }
 }

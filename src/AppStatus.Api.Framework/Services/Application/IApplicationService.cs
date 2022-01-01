@@ -9,5 +9,7 @@ namespace AppStatus.Api.Framework.Services.Application
         Task<IDashboardData> GetDashboardDataAsync(string accountId, CancellationToken cancellationToken);
 
         Task<string> FullCreateAsync(string accountId, IFullCreate model, CancellationToken cancellationToken);
+
+        Task PatchNotesAsync(string accountId, string id, string notes, CancellationToken cancellationToken);
     }
 }

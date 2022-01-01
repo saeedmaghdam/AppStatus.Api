@@ -87,7 +87,25 @@ namespace AppStatus.Api.Controllers.Application.ViewModels
             set;
         }
 
-        public string[] History
+        public IEnumerable<ApplicationHistoryItemViewModel> History
+        {
+            get;
+            set;
+        }
+
+        public IEnumerable<ApplicationToDoItemViewModel> ToDo
+        {
+            get;
+            set;
+        }
+
+        public int UnDoneToDoCount
+        {
+            get;
+            set;
+        }
+
+        public string Notes
         {
             get;
             set;
@@ -103,15 +121,77 @@ namespace AppStatus.Api.Controllers.Application.ViewModels
                 Employees = x.Employees == null ? null : EmployeeViewModel.ToViewModel(x.Employees),
                 ApplySource = x.ApplySource,
                 CoverLetterId = x.CoverLetterId,
-                History = x.History,
                 Id = x.Id,
                 RecordInsertDate = x.RecordInsertDate,
                 RecordLastEditDate = x.RecordLastEditDate,
                 RecordStatus = x.RecordStatus,
                 ResumeId = x.ResumeId,
                 State = x.State,
-                StateId = x.StateId
+                StateId = x.StateId,
+                History = x.History == null ? null : x.History.Select(x => new ApplicationHistoryItemViewModel()
+                {
+                    Description = x.Description,
+                    Id = x.Id,
+                    RecordInsertDate = x.RecordInsertDate
+                }),
+                ToDo = x.ToDo == null ? null : x.ToDo.Select(x => new ApplicationToDoItemViewModel()
+                {
+                    RecordInsertDate = x.RecordInsertDate,
+                    Id = x.Id,
+                    IsDone = x.IsDone,
+                    Title = x.Title
+                }),
+                UnDoneToDoCount = x.ToDo == null ? 0 : x.ToDo.Count(x => !x.IsDone),
+                Notes = x.Notes
             });
+        }
+    }
+
+    public class ApplicationHistoryItemViewModel
+    {
+        public string Id
+        {
+            get;
+            set;
+        }
+
+        public DateTime RecordInsertDate
+        {
+            get;
+            set;
+        }
+
+        public string Description
+        {
+            get;
+            set;
+        }
+    }
+
+    public class ApplicationToDoItemViewModel
+    {
+        public string Id
+        {
+            get;
+            set;
+        }
+
+        public DateTime RecordInsertDate
+        {
+            get;
+            set;
+        }
+
+        public string Title
+        {
+            get;
+            set;
+        }
+
+        public bool IsDone
+        {
+            get;
+            set;
         }
     }
 }
