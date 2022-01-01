@@ -94,15 +94,27 @@ namespace AppStatus.Api.Controllers.Application
         }
 
         [HttpPatch("{id}/notes")]
-        public async Task PatchNotesAsync([FromRoute] string id, [FromBody] PathNotesViewModel model, CancellationToken cancellationToken)
+        public async Task PatchNotesAsync([FromRoute] string id, [FromBody] PathNotesInputModel model, CancellationToken cancellationToken)
         {
             await _applicationService.PatchNotesAsync(UserSession.AccountId, id, model.Notes, cancellationToken);
         }
 
         [HttpPatch("{id}/toDoStatus")]
-        public async Task PatchTodoStatusAsync([FromRoute] string id, [FromBody] PatchTodoStatus model, CancellationToken cancellationToken)
+        public async Task PatchToDoStatusAsync([FromRoute] string id, [FromBody] PatchTodoStatusInputModel model, CancellationToken cancellationToken)
         {
             await _applicationService.PatchTodoStatusAsync(UserSession.AccountId, id, model.ToDoIds, cancellationToken);
+        }
+
+        [HttpPost("{id}/toDo")]
+        public async Task CreateToDoStatusAsync([FromRoute] string id, [FromBody] CreateToDoInputModel model, CancellationToken cancellationToken)
+        {
+            await _applicationService.CreateToDoAsync(UserSession.AccountId, id, model.Title, cancellationToken);
+        }
+
+        [HttpPatch("{id}/state")]
+        public async Task PatchStateAsync([FromRoute] string id, [FromBody] PathStateInputModel model, CancellationToken cancellationToken)
+        {
+            await _applicationService.PatchStateAsync(UserSession.AccountId, id, model.StateId, cancellationToken);
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace AppStatus.Api.Domain
 {
@@ -52,13 +53,13 @@ namespace AppStatus.Api.Domain
             set;
         }
 
-        public ApplicationHistoryItem[] History
+        public List<ApplicationHistoryItem> History
         {
             get;
             set;
         }
 
-        public ApplicationToDoItem[] ToDo
+        public List<ApplicationToDoItem> ToDo
         {
             get;
             set;

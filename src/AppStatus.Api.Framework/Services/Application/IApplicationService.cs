@@ -13,5 +13,9 @@ namespace AppStatus.Api.Framework.Services.Application
         Task PatchNotesAsync(string accountId, string id, string notes, CancellationToken cancellationToken);
 
         Task PatchTodoStatusAsync(string accountId, string id, string[] todoIds, CancellationToken cancellationToken);
+
+        Task CreateToDoAsync(string accountId, string id, string title, CancellationToken cancellationToken);
+
+        Task PatchStateAsync(string accountId, string id, short stateId, CancellationToken cancellationToken);
     }
 }

@@ -130,12 +130,12 @@ namespace AppStatus.Api.Service.Application
                 CoverLetterId = model.CoverLetterId,
                 CreatorAccountId = accountId,
                 ResumeId = model.ResumeId,
-                History = new[] { new Domain.ApplicationHistoryItem() { Description = "Applied", RecordInsertDate = DateTime.Now } },
-                ToDo = model.ToDo == null ? new List<Domain.ApplicationToDoItem>().ToArray() : model.ToDo.Select(x => new Domain.ApplicationToDoItem()
+                History =  new List<Domain.ApplicationHistoryItem>() { new Domain.ApplicationHistoryItem() { Description = "Applied", RecordInsertDate = DateTime.Now } },
+                ToDo = model.ToDo == null ? new List<Domain.ApplicationToDoItem>() : model.ToDo.Select(x => new Domain.ApplicationToDoItem()
                 {
                     Title = x,
                     RecordInsertDate = DateTime.Now
-                }).ToArray(),
+                }).ToList(),
                 Notes = model.Notes
             };
 
@@ -162,7 +162,7 @@ namespace AppStatus.Api.Service.Application
             var offer = await _applicationCollection.Find(offerQuery).Limit(_options.CurrentValue.MaximumItemsInDashboard).ToListAsync(cancellationToken);
             var totalOfferCount = await _applicationCollection.Find(offerQuery).CountDocumentsAsync(cancellationToken);
 
-            var rejectedQuery = Builders<Domain.Application>.Filter.Where(x => x.StateId == State.Offer && x.CreatorAccountId == accountId && x.RecordStatus != RecordStatus.Deleted);
+            var rejectedQuery = Builders<Domain.Application>.Filter.Where(x => x.StateId == State.Rejected && x.CreatorAccountId == accountId && x.RecordStatus != RecordStatus.Deleted);
             var rejected = await _applicationCollection.Find(rejectedQuery).Limit(_options.CurrentValue.MaximumItemsInDashboard).ToListAsync(cancellationToken);
             var totalRejectedCount = await _applicationCollection.Find(rejectedQuery).CountDocumentsAsync(cancellationToken);
 
@@ -235,6 +235,38 @@ namespace AppStatus.Api.Service.Application
             await _applicationCollection.ReplaceOneAsync(filter, application, new ReplaceOptions(), cancellationToken);
         }
 
+        public async Task CreateToDoAsync(string accountId, string id, string title, CancellationToken cancellationToken)
+        {
+            var filter = Builders<Domain.Application>.Filter.Where(x => x.CreatorAccountId == accountId && x.Id == id && x.RecordStatus != RecordStatus.Deleted);
+            var application = await _applicationCollection.Find(filter).FirstOrDefaultAsync(cancellationToken);
+            if (application == null)
+                throw new ValidationException("100", "Application not found.");
+
+            if (application.ToDo == null)
+                application.ToDo = new List<Domain.ApplicationToDoItem>();
+
+            application.ToDo.Add(new Domain.ApplicationToDoItem()
+            {
+                Title = title,
+                IsDone = false,
+                RecordInsertDate = DateTime.Now
+            });
+
+            await _applicationCollection.ReplaceOneAsync(filter, application, new ReplaceOptions(), cancellationToken);
+        }
+
+        public async Task PatchStateAsync(string accountId, string id, short stateId, CancellationToken cancellationToken)
+        {
+            var filter = Builders<Domain.Application>.Filter.Where(x => x.CreatorAccountId == accountId && x.Id == id && x.RecordStatus != RecordStatus.Deleted);
+            var application = await _applicationCollection.Find(filter).FirstOrDefaultAsync(cancellationToken);
+            if (application == null)
+                throw new ValidationException("100", "Application not found.");
+
+            application.StateId = stateId;
+
+            await _applicationCollection.ReplaceOneAsync(filter, application, new ReplaceOptions(), cancellationToken);
+        }
+
         public static IEnumerable<IApplication> ToModel(IEnumerable<Domain.Application> applications, IEnumerable<Domain.Company> companies = null, IEnumerable<Domain.Employee> employees = null)
         {
             return applications.Select(application => new ApplicationModel()
@@ -252,13 +284,13 @@ namespace AppStatus.Api.Service.Application
                 ResumeId = application.ResumeId,
                 State = State.ToString(application.StateId),
                 StateId = application.StateId,
-                History = application.History == null ? null : application.History.Select(x => new ApplicationHistoryItemModel()
+                History = application.History == null ? null : application.History.OrderByDescending(x=>x.RecordInsertDate).Select(x => new ApplicationHistoryItemModel()
                 {
                     RecordInsertDate = x.RecordInsertDate,
                     Description = x.Description,
                     Id = x.Id
                 }),
-                ToDo = application.ToDo == null ? null : application.ToDo.OrderBy(x => x.RecordInsertDate).ThenBy(x => x.IsDone).Select(x => new ApplicationToDoItemModel()
+                ToDo = application.ToDo == null ? null : application.ToDo.OrderBy(x => x.IsDone).ThenByDescending(x => x.RecordInsertDate).Select(x => new ApplicationToDoItemModel()
                 {
                     Id = x.Id,
                     IsDone = x.IsDone,

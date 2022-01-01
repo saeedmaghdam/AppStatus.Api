@@ -1,8 +1,8 @@
 ﻿namespace AppStatus.Api.Controllers.Application.InputModels
 {
-    public class PathNotesViewModel
+    public class CreateToDoInputModel
     {
-        public string Notes
+        public string Title
         {
             get;
             set;

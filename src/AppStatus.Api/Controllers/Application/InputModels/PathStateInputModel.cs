@@ -1,8 +1,8 @@
 ﻿namespace AppStatus.Api.Controllers.Application.InputModels
 {
-    public class PatchTodoStatus
+    public class PathStateInputModel
     {
-        public string[] ToDoIds
+        public short StateId
         {
             get;
             set;
