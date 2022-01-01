@@ -1,4 +1,5 @@
-﻿using AppStatus.Api.Framework;
+﻿using AppStatus.Api.Attributes;
+using AppStatus.Api.Framework;
 using AppStatus.Api.Middlewares;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -39,6 +40,8 @@ namespace AppStatus.Api
             services.AddSwaggerGen();
 
             services.AddAuthentication(x => { x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme; }).AddJwtBearer();
+
+            services.AddSingleton<RecaptchaV3ValidationAttribute>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

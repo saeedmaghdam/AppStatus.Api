@@ -1,5 +1,6 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
+using AppStatus.Api.Attributes;
 using AppStatus.Api.Controllers.Account.InputModels;
 using AppStatus.Api.Controllers.Account.ViewModels;
 using AppStatus.Api.Framework.Services.Account;
@@ -29,8 +30,9 @@ namespace AppStatus.Api.Controllers.Account
             return OkData(token);
         }
 
+        [ServiceFilter(typeof(RecaptchaV3ValidationAttribute))]
         [HttpPost("login")]
-        public async Task<ActionResult<ApiResultViewModel<LoginViewModel>>> LoginAsync([FromBody] AccountLoginInputModel model, CancellationToken cancellationToken)
+        public async Task<ActionResult<ApiResultViewModel<LoginViewModel>>> LoginAsync([FromBody] AccountLoginInputModel model, string recaptchaToken, CancellationToken cancellationToken)
         {
             var result = await _accountService.LoginAsync(model.Username, model.Password, cancellationToken);
 

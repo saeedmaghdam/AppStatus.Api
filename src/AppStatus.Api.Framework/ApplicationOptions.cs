@@ -6,5 +6,7 @@
         public string DatabaseName { get; set; } = null!;
         public string JwtSecret { get; set; } = null!;
         public int MaximumItemsInDashboard { get; set; } = 10;
+        public string ReCaptchaSiteKey { get; set; }
+        public string ReCaptchaSecretKey { get; set; }
     }
 }
