@@ -98,5 +98,11 @@ namespace AppStatus.Api.Controllers.Application
         {
             await _applicationService.PatchNotesAsync(UserSession.AccountId, id, model.Notes, cancellationToken);
         }
+
+        [HttpPatch("{id}/toDoStatus")]
+        public async Task PatchTodoStatusAsync([FromRoute] string id, [FromBody] PatchTodoStatus model, CancellationToken cancellationToken)
+        {
+            await _applicationService.PatchTodoStatusAsync(UserSession.AccountId, id, model.ToDoIds, cancellationToken);
+        }
     }
 }
