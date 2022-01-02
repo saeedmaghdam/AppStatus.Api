@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using AppStatus.Api.Attributes;
 using AppStatus.Api.Controllers.Account.InputModels;
 using AppStatus.Api.Controllers.Account.ViewModels;
+using AppStatus.Api.Framework.Exceptions;
 using AppStatus.Api.Framework.Services.Account;
 using AppStatus.Api.Shared;
 using AppStatus.Api.ViewModels;
@@ -19,15 +20,6 @@ namespace AppStatus.Api.Controllers.Account
         public AccountController(IAccountService accountService)
         {
             _accountService = accountService;
-        }
-
-        [Authorize]
-        [HttpPost]
-        public async Task<ActionResult<ApiResultViewModel<string>>> CreateAsync([FromBody] AccountCreateInputModel model, CancellationToken cancellationToken)
-        {
-            var token = await _accountService.CreateAsync("1", model.Username, model.Password, model.Name, model.Family, cancellationToken);
-
-            return OkData(token);
         }
 
         [ServiceFilter(typeof(RecaptchaV3ValidationAttribute))]
@@ -57,6 +49,42 @@ namespace AppStatus.Api.Controllers.Account
             var isAuthenticated = await _accountService.IsAuthenticated(token, cancellationToken);
 
             return OkData(isAuthenticated);
+        }
+
+        [HttpPost("registerVerificationCode")]
+        public async Task RegisterVerificationCodeAsync([FromBody] RegisterVerificationCodeInputModel model, CancellationToken cancellationToken)
+        {
+            if (!string.IsNullOrEmpty(UserSession.AccountId))
+                throw new ValidationException("100", "You're logged-in already.");
+
+            await _accountService.RegisterVerificationCodeAsync(model.MobileNumber, cancellationToken);
+        }
+
+        [HttpPost("register")]
+        public async Task RegisterAsync([FromBody] RegisterInputModel model, CancellationToken cancellationToken)
+        {
+            if (!string.IsNullOrEmpty(UserSession.AccountId))
+                throw new ValidationException("100", "You're logged-in already.");
+
+            await _accountService.RegisterAsync(model.MobileNumber, model.Password, model.Name, model.Family, model.VerificationCode, cancellationToken);
+        }
+
+        [HttpPost("resetPasswordVerificationCode")]
+        public async Task ResetPasswordVerificationCodeAsync([FromBody] ResetPasswordVerificationCodeInputModel model, CancellationToken cancellationToken)
+        {
+            if (!string.IsNullOrEmpty(UserSession.AccountId))
+                throw new ValidationException("100", "You're logged-in already.");
+
+            await _accountService.ResetPasswordVerificationCodeAsync(model.MobileNumber, cancellationToken);
+        }
+
+        [HttpPost("resetPassword")]
+        public async Task ResetPasswordAsync([FromBody] ResetPasswordInputModel model, CancellationToken cancellationToken)
+        {
+            if (!string.IsNullOrEmpty(UserSession.AccountId))
+                throw new ValidationException("100", "You're logged-in already.");
+
+            await _accountService.ResetPasswordAsync(model.MobileNumber, model.Password, model.VerificationCode, cancellationToken);
         }
     }
 }

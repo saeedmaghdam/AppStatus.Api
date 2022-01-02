@@ -21,8 +21,9 @@ namespace AppStatus.Api.Service.Account
         private readonly IMongoCollection<Session> _sessionCollection;
         private readonly ISecurity _security;
         private readonly IJwtManager _jwtManager;
+        private readonly INotificationHandler _notificationHandler;
 
-        public AccountService(IOptionsMonitor<ApplicationOptions> options, ISecurity security, IJwtManager jwtManager)
+        public AccountService(IOptionsMonitor<ApplicationOptions> options, ISecurity security, IJwtManager jwtManager, INotificationHandler notificationHandler)
         {
             _security = security;
             _jwtManager = jwtManager;
@@ -35,6 +36,7 @@ namespace AppStatus.Api.Service.Account
 
             _accountCollection = mongoDatabase.GetCollection<Domain.Account>("Account");
             _sessionCollection = mongoDatabase.GetCollection<Session>("Session");
+            _notificationHandler = notificationHandler;
         }
 
         public async Task<IAccount> GetAccountByToken(string token, CancellationToken cancellationToken)
@@ -150,6 +152,93 @@ namespace AppStatus.Api.Service.Account
             session.RecordLastEditDate = DateTime.Now;
 
             await _sessionCollection.ReplaceOneAsync(filter, session, new ReplaceOptions(), cancellationToken);
+        }
+
+        public async Task RegisterVerificationCodeAsync(string mobileNumber, CancellationToken cancellationToken)
+        {
+            var currentAccount = await _accountCollection.Find(x => x.Username == mobileNumber.Trim().ToLower()).FirstOrDefaultAsync(cancellationToken);
+            if (currentAccount != null && currentAccount.IsVerified)
+                throw new ValidationException("100", $"A verified account with mobile number {mobileNumber} already exists.");
+
+            if (currentAccount == null)
+            {
+                currentAccount = new Domain.Account()
+                {
+                    IsAdmin = false,
+                    IsVerified = false,
+                    RecordInsertDate = DateTime.Now,
+                    RecordLastEditDate = DateTime.Now,
+                    RecordStatus = RecordStatus.Inserted,
+                    Username = mobileNumber.Trim().ToLower()
+                };
+
+                await _accountCollection.InsertOneAsync(currentAccount, new InsertOneOptions(), cancellationToken);
+            }
+
+            var verificationCode = new Random().Next(1000, 9999).ToString();
+            currentAccount.VerificationCode = verificationCode;
+
+            await _notificationHandler.SendVerificationCodeAsync(mobileNumber, verificationCode, cancellationToken);
+
+            await _accountCollection.ReplaceOneAsync(x => x.Username == currentAccount.Username, currentAccount, new ReplaceOptions(), cancellationToken);
+        }
+
+        public async Task RegisterAsync(string mobileNumber, string password, string name, string family, string verificationCode, CancellationToken cancellationToken)
+        {
+            var currentAccount = await _accountCollection.Find(x => x.Username == mobileNumber.Trim().ToLower()).FirstOrDefaultAsync(cancellationToken);
+
+            if (currentAccount == null)
+                throw new ValidationException("100", "Account not found.");
+
+            if (currentAccount != null && currentAccount.IsVerified)
+                throw new ValidationException("100", $"A verified account with mobile number {mobileNumber} already exists.");
+
+            if (currentAccount.VerificationCode != verificationCode)
+                throw new ValidationException("100", "Verification code is not working.");
+
+            currentAccount.Name = name;
+            currentAccount.Family = family;
+            currentAccount.Password = _security.HashPassword(password);
+            currentAccount.IsVerified = true;
+            currentAccount.RecordLastEditDate = DateTime.Now;
+            currentAccount.RecordStatus = RecordStatus.Updated;
+            currentAccount.VerificationCode = string.Empty;
+
+            await _accountCollection.ReplaceOneAsync(x=> x.Username == mobileNumber.Trim().ToLower(), currentAccount, new ReplaceOptions(), cancellationToken);
+        }
+
+        public async Task ResetPasswordVerificationCodeAsync(string mobileNumber, CancellationToken cancellationToken)
+        {
+            var currentAccount = await _accountCollection.Find(x => x.Username == mobileNumber.Trim().ToLower()).FirstOrDefaultAsync(cancellationToken);
+            if (currentAccount == null)
+                throw new ValidationException("100", $"Account not found.");
+
+            var verificationCode = new Random().Next(1000, 9999).ToString();
+            currentAccount.VerificationCode = verificationCode;
+            currentAccount.RecordLastEditDate = DateTime.Now;
+            currentAccount.RecordStatus = RecordStatus.Updated;
+
+            await _notificationHandler.SendVerificationCodeAsync(mobileNumber, verificationCode, cancellationToken);
+
+            await _accountCollection.ReplaceOneAsync(x=> x.Username == mobileNumber.Trim().ToLower(), currentAccount, new ReplaceOptions(), cancellationToken);
+        }
+
+        public async Task ResetPasswordAsync(string mobileNumber, string password, string verificationCode, CancellationToken cancellationToken)
+        {
+            var currentAccount = await _accountCollection.Find(x => x.Username.ToLower() == mobileNumber.Trim().ToLower()).FirstOrDefaultAsync(cancellationToken);
+            if (currentAccount == null)
+                throw new ValidationException("100", "Account not found.");
+
+            if (currentAccount.VerificationCode != verificationCode)
+                throw new ValidationException("100", "Verification code is not working.");
+
+            currentAccount.IsVerified = true;
+            currentAccount.Password = _security.HashPassword(password);
+            currentAccount.RecordLastEditDate = DateTime.Now;
+            currentAccount.RecordStatus = RecordStatus.Updated;
+            currentAccount.VerificationCode = string.Empty;
+
+            await _accountCollection.ReplaceOneAsync(x => x.Username.ToLower() == mobileNumber.Trim().ToLower(), currentAccount, new ReplaceOptions(), cancellationToken);
         }
 
         public static IEnumerable<IAccount> ToModel(IEnumerable<Domain.Account> accounts)

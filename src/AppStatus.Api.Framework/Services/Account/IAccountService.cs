@@ -10,5 +10,9 @@ namespace AppStatus.Api.Framework.Services.Account
         Task<ILogin> LoginAsync(string username, string password, CancellationToken cancellationToken);
         Task LogoutAsync(string token, CancellationToken cancellationToken);
         Task<bool> IsAuthenticated(string token, CancellationToken cancellationToken);
+        Task RegisterVerificationCodeAsync(string mobileNumber, CancellationToken cancellationToken);
+        Task RegisterAsync(string mobileNumber, string password, string name, string family, string verificationCode, CancellationToken cancellationToken);
+        Task ResetPasswordVerificationCodeAsync(string mobileNumber, CancellationToken cancellationToken);
+        Task ResetPasswordAsync(string mobileNumber, string password, string verificationCode, CancellationToken cancellationToken);
     }
 }

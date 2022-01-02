@@ -1,8 +1,8 @@
-﻿namespace AppStatus.Api.Domain
+﻿namespace AppStatus.Api.Controllers.Account.InputModels
 {
-    public class Account : BaseEntity
+    public class RegisterInputModel
     {
-        public string Username
+        public string MobileNumber
         {
             get;
             set;
@@ -21,18 +21,6 @@
         }
 
         public string Family
-        {
-            get;
-            set;
-        }
-
-        public bool IsAdmin
-        {
-            get;
-            set;
-        }
-
-        public bool IsVerified
         {
             get;
             set;
