@@ -51,6 +51,7 @@ namespace AppStatus.Api.Controllers.Account
             return OkData(isAuthenticated);
         }
 
+        [ServiceFilter(typeof(RecaptchaV3ValidationAttribute))]
         [HttpPost("registerVerificationCode")]
         public async Task RegisterVerificationCodeAsync([FromBody] RegisterVerificationCodeInputModel model, CancellationToken cancellationToken)
         {
@@ -60,6 +61,7 @@ namespace AppStatus.Api.Controllers.Account
             await _accountService.RegisterVerificationCodeAsync(model.MobileNumber, cancellationToken);
         }
 
+        [ServiceFilter(typeof(RecaptchaV3ValidationAttribute))]
         [HttpPost("register")]
         public async Task RegisterAsync([FromBody] RegisterInputModel model, CancellationToken cancellationToken)
         {
@@ -69,6 +71,7 @@ namespace AppStatus.Api.Controllers.Account
             await _accountService.RegisterAsync(model.MobileNumber, model.Password, model.Name, model.Family, model.VerificationCode, cancellationToken);
         }
 
+        [ServiceFilter(typeof(RecaptchaV3ValidationAttribute))]
         [HttpPost("resetPasswordVerificationCode")]
         public async Task ResetPasswordVerificationCodeAsync([FromBody] ResetPasswordVerificationCodeInputModel model, CancellationToken cancellationToken)
         {
@@ -78,6 +81,7 @@ namespace AppStatus.Api.Controllers.Account
             await _accountService.ResetPasswordVerificationCodeAsync(model.MobileNumber, cancellationToken);
         }
 
+        [ServiceFilter(typeof(RecaptchaV3ValidationAttribute))]
         [HttpPost("resetPassword")]
         public async Task ResetPasswordAsync([FromBody] ResetPasswordInputModel model, CancellationToken cancellationToken)
         {
