@@ -302,15 +302,18 @@ namespace AppStatus.Api.Service.Application
             if (!string.IsNullOrEmpty(logMessage))
                 newLogMessage.Add(logMessage);
 
-            application.History.Add(new Domain.ApplicationHistoryItem()
+            if (newLogMessage.Any())
             {
-                Description = string.Join(" - ", newLogMessage),
-                RecordInsertDate = DateTime.Now
-            });
+                application.History.Add(new Domain.ApplicationHistoryItem()
+                {
+                    Description = string.Join(" - ", newLogMessage),
+                    RecordInsertDate = DateTime.Now
+                });
 
-            application.StateId = stateId;
+                application.StateId = stateId;
 
-            await _applicationCollection.ReplaceOneAsync(filter, application, new ReplaceOptions(), cancellationToken);
+                await _applicationCollection.ReplaceOneAsync(filter, application, new ReplaceOptions(), cancellationToken);
+            }
         }
 
         public async Task DeleteAsync(string accountId, string id, CancellationToken cancellationToken)

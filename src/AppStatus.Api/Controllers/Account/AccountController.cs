@@ -54,7 +54,7 @@ namespace AppStatus.Api.Controllers.Account
         [HttpPost("registerVerificationCode")]
         public async Task RegisterVerificationCodeAsync([FromBody] RegisterVerificationCodeInputModel model, CancellationToken cancellationToken)
         {
-            if (!string.IsNullOrEmpty(UserSession.AccountId))
+            if (UserSession != null && !string.IsNullOrEmpty(UserSession.AccountId))
                 throw new ValidationException("100", "You're logged-in already.");
 
             await _accountService.RegisterVerificationCodeAsync(model.MobileNumber, cancellationToken);
@@ -63,7 +63,7 @@ namespace AppStatus.Api.Controllers.Account
         [HttpPost("register")]
         public async Task RegisterAsync([FromBody] RegisterInputModel model, CancellationToken cancellationToken)
         {
-            if (!string.IsNullOrEmpty(UserSession.AccountId))
+            if (UserSession != null && !string.IsNullOrEmpty(UserSession.AccountId))
                 throw new ValidationException("100", "You're logged-in already.");
 
             await _accountService.RegisterAsync(model.MobileNumber, model.Password, model.Name, model.Family, model.VerificationCode, cancellationToken);
@@ -72,7 +72,7 @@ namespace AppStatus.Api.Controllers.Account
         [HttpPost("resetPasswordVerificationCode")]
         public async Task ResetPasswordVerificationCodeAsync([FromBody] ResetPasswordVerificationCodeInputModel model, CancellationToken cancellationToken)
         {
-            if (!string.IsNullOrEmpty(UserSession.AccountId))
+            if (UserSession != null && !string.IsNullOrEmpty(UserSession.AccountId))
                 throw new ValidationException("100", "You're logged-in already.");
 
             await _accountService.ResetPasswordVerificationCodeAsync(model.MobileNumber, cancellationToken);
@@ -81,7 +81,7 @@ namespace AppStatus.Api.Controllers.Account
         [HttpPost("resetPassword")]
         public async Task ResetPasswordAsync([FromBody] ResetPasswordInputModel model, CancellationToken cancellationToken)
         {
-            if (!string.IsNullOrEmpty(UserSession.AccountId))
+            if (UserSession != null && !string.IsNullOrEmpty(UserSession.AccountId))
                 throw new ValidationException("100", "You're logged-in already.");
 
             await _accountService.ResetPasswordAsync(model.MobileNumber, model.Password, model.VerificationCode, cancellationToken);
