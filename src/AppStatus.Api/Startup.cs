@@ -30,7 +30,7 @@ namespace AppStatus.Api
                 options.AddDefaultPolicy(
                     builder =>
                     {
-                        builder.WithOrigins("https://localhost:4200").AllowAnyMethod().AllowAnyHeader().AllowCredentials();
+                        builder.WithOrigins(new[] { "https://localhost:4200", "https://eltak.ir", "https://api.eltak.ir" }).AllowAnyMethod().AllowAnyHeader().AllowCredentials();
                     });
             });
 
@@ -50,12 +50,17 @@ namespace AppStatus.Api
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-
-                app.UseSwagger();
-                app.UseSwaggerUI();
             }
 
-            app.UseCors();
+            app.UseSwagger();
+            app.UseSwaggerUI();
+
+            //app.UseCors();
+            app.UseCors(x => x
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .SetIsOriginAllowed(origin => true) // allow any origin
+                .AllowCredentials()); // allow credentials
 
             app.UseMiddleware<ExceptionMiddleware>();
             app.UseMiddleware<AuthenticatorMiddleware>();
