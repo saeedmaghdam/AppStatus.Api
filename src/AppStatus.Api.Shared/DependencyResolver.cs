@@ -9,6 +9,7 @@ namespace AppStatus.Api.Shared
         {
             services.AddScoped<ISecurity, Security>();
             services.AddScoped<IJwtManager, JwtManager>();
+            services.AddSingleton<INotificationHandler, NotificationHandler>();
         }
     }
 }

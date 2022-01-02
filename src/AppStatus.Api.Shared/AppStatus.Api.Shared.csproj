@@ -5,6 +5,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="MassTransit" Version="7.3.0" />
+    <PackageReference Include="MassTransit.RabbitMQ" Version="7.3.0" />
     <PackageReference Include="Microsoft.AspNetCore.Cryptography.KeyDerivation" Version="6.0.1" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Abstractions" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.5" />
@@ -15,6 +17,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AppStatus.Api.Framework\AppStatus.Api.Framework.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="SMA.Service.Notification.Message">
+      <HintPath>..\..\lib\SMA.Service.Notification.Message.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

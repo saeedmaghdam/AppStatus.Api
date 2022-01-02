@@ -8,5 +8,8 @@
         public int MaximumItemsInDashboard { get; set; } = 10;
         public string ReCaptchaSiteKey { get; set; }
         public string ReCaptchaSecretKey { get; set; }
+        public string NotificationProfileId { get; set; }
+        public string NotificationMessageId { get; set; }
+        public string NotificationParameterName { get; set; }
     }
 }
