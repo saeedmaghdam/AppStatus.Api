@@ -45,7 +45,7 @@ namespace AppStatus.Api.Service.Account
             if (session == null)
                 throw new ValidationException("100", "Token is invalid.");
 
-            var account = await _accountCollection.Find(x => x.Id == session.AccountId).FirstOrDefaultAsync();
+            var account = await _accountCollection.Find(x => x.Id == session.AccountId).FirstOrDefaultAsync(cancellationToken);
             if (account == null)
                 throw new ValidationException("100", "Account already exists.");
 
@@ -54,11 +54,15 @@ namespace AppStatus.Api.Service.Account
 
         public async Task<string> CreateAsync(string accountId, string username, string password, string name, string family, CancellationToken cancellationToken)
         {
+            var account = await _accountCollection.Find(x => x.Id == accountId).FirstOrDefaultAsync(cancellationToken);
+            if (account == null)
+                throw new ValidationException("100", "Account not found.");
+
             var currentAccount = await _accountCollection.Find(x => x.Username.ToLower() == username.Trim().ToLower()).FirstOrDefaultAsync(cancellationToken);
             if (currentAccount != null)
                 throw new ValidationException("100", "Account already exists.");
 
-            var account = new Domain.Account()
+            account = new Domain.Account()
             {
                 RecordInsertDate = DateTime.Now,
                 RecordLastEditDate = DateTime.Now,

@@ -58,6 +58,41 @@ namespace AppStatus.Api.Controllers.Application
             return OkData(result);
         }
 
+        [HttpPost("fullUpdate")]
+        public async Task FullUpdateAsync(FullUpdateInputModel model, CancellationToken cancellationToken)
+        {
+            await _applicationService.FullUpdateAsync(UserSession.AccountId, new FullUpdateModel()
+            {
+                Id = model.Id,
+                Salary = model.Salary,
+                ApplySource = model.ApplySource,
+                Company = new FullUpdateCompanyModel()
+                {
+                    Emails = model.Company.Emails,
+                    PhoneNumbers = model.Company.PhoneNumbers
+                },
+                CoverLetterId = model.CoverLetterId,
+                ResumeId = model.ResumeId,
+                Employees = model.Employees.Select(x => new FullUpdateEmployeeModel()
+                {
+                    Email = x.Email,
+                    Name = x.Name,
+                    PhoneNumber = x.PhoneNumber,
+                    PictureId = x.PictureId,
+                    ProfileUrl = x.ProfileUrl,
+                    RoleId = x.RoleId
+                })
+            }, cancellationToken);
+        }
+
+        [HttpGet("{id}")]
+        public async Task<ActionResult<ApiResultViewModel<ApplicationViewModel>>> GetAsync([FromRoute] string id, CancellationToken cancellationToken)
+        {
+            var application = await _applicationService.GetByIdAsync(UserSession.AccountId, id, cancellationToken);
+
+            return OkData(ApplicationViewModel.ToViewModel(new[] { application }).Single());
+        }
+
         [HttpGet("dashboardData")]
         public async Task<ActionResult<ApiResultViewModel<DashboardDataViewModel>>> GetDashboardDataAsync(CancellationToken cancellationToken)
         {

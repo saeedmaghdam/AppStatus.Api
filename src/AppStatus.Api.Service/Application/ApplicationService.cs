@@ -23,6 +23,7 @@ namespace AppStatus.Api.Service.Application
         private readonly IMongoCollection<Domain.Company> _companyCollection;
         private readonly IMongoCollection<Domain.Employee> _employeeCollection;
         private readonly IMongoCollection<Domain.Object> _objectCollection;
+        private readonly IMongoCollection<Domain.Account> _accountCollection;
 
         private readonly MongoClient _mongoClient;
 
@@ -41,6 +42,7 @@ namespace AppStatus.Api.Service.Application
             _companyCollection = mongoDatabase.GetCollection<Domain.Company>("Company");
             _employeeCollection = mongoDatabase.GetCollection<Domain.Employee>("Employee");
             _objectCollection = mongoDatabase.GetCollection<Domain.Object>("Object");
+            _accountCollection = mongoDatabase.GetCollection<Domain.Account>("Account");
         }
 
         public async Task<string> FullCreateAsync(string accountId, IFullCreate model, CancellationToken cancellationToken)
@@ -55,22 +57,26 @@ namespace AppStatus.Api.Service.Application
                 if (string.IsNullOrEmpty(employee.Name.Trim()))
                     throw new ValidationException("100", "Employee's name is required.");
 
-            if (string.IsNullOrEmpty(model.ApplySource.Trim()))
-                throw new ValidationException("100", "Applied from address field is required.");
+            if (string.IsNullOrEmpty(model.JobTitle.Trim()))
+                throw new ValidationException("100", "Job title is required.");
 
-            if (string.IsNullOrEmpty(model.ResumeId.Trim()))
-                throw new ValidationException("100", "Resume id is required.");
+            var account = await _accountCollection.Find(x => x.Id == accountId).FirstOrDefaultAsync(cancellationToken);
+            if (account == null)
+                throw new ValidationException("100", "Account not found.");
 
-            if (string.IsNullOrEmpty(model.CoverLetterId.Trim()))
-                throw new ValidationException("100", "Cover letter id is required.");
+            if (!string.IsNullOrEmpty(model.ResumeId))
+            {
+                var resume = await _objectCollection.Find(x => x.Id == model.ResumeId).FirstOrDefaultAsync(cancellationToken);
+                if (resume == null)
+                    throw new ValidationException("100", "Resume not found.");
+            }
 
-            var resume = await _objectCollection.Find(x => x.Id == model.ResumeId).FirstOrDefaultAsync(cancellationToken);
-            if (resume == null)
-                throw new ValidationException("100", "Resume not found.");
-
-            var coverLetter = await _objectCollection.Find(x => x.Id == model.CoverLetterId).FirstOrDefaultAsync(cancellationToken);
-            if (coverLetter == null)
-                throw new ValidationException("100", "Coverletter not found.");
+            if (!string.IsNullOrEmpty(model.CoverLetterId))
+            {
+                var coverLetter = await _objectCollection.Find(x => x.Id == model.CoverLetterId).FirstOrDefaultAsync(cancellationToken);
+                if (coverLetter == null)
+                    throw new ValidationException("100", "Coverletter not found.");
+            }
 
             foreach (var employee in model.Employees)
             {
@@ -144,22 +150,130 @@ namespace AppStatus.Api.Service.Application
             return application.Id;
         }
 
+        public async Task FullUpdateAsync(string accountId, IFullUpdate model, CancellationToken cancellationToken)
+        {
+            foreach (var employee in model.Employees)
+                if (string.IsNullOrEmpty(employee.Name.Trim()))
+                    throw new ValidationException("100", "Employee's name is required.");
+
+            var account = await _accountCollection.Find(x => x.Id == accountId).FirstOrDefaultAsync(cancellationToken);
+            if (account == null)
+                throw new ValidationException("100", "Account not found.");
+
+            if (!string.IsNullOrEmpty(model.ResumeId))
+            {
+                var resume = await _objectCollection.Find(x => x.Id == model.ResumeId && x.CreatorAccountId == accountId).FirstOrDefaultAsync(cancellationToken);
+                if (resume == null)
+                    throw new ValidationException("100", "Resume not found.");
+            }
+
+            if (!string.IsNullOrEmpty(model.CoverLetterId))
+            {
+                var coverLetter = await _objectCollection.Find(x => x.Id == model.CoverLetterId && x.CreatorAccountId == accountId).FirstOrDefaultAsync(cancellationToken);
+                if (coverLetter == null)
+                    throw new ValidationException("100", "Coverletter not found.");
+            }
+
+            foreach (var employee in model.Employees)
+            {
+                if (string.IsNullOrEmpty(employee.PictureId))
+                    continue;
+
+                var picture = await _objectCollection.Find(x => x.Id == employee.PictureId).FirstOrDefaultAsync(cancellationToken);
+                if (picture == null)
+                    throw new ValidationException("100", "Employee's picture not found.");
+            }
+
+            var application = await _applicationCollection.Find(x => x.Id == model.Id && x.CreatorAccountId == accountId && x.RecordStatus != RecordStatus.Deleted).FirstOrDefaultAsync(cancellationToken);
+            if (application == null)
+                throw new ValidationException("100", "Application not found.");
+
+            var company = await _companyCollection.Find(x => x.Id == application.CompanyId).SingleAsync(cancellationToken);
+            company.Emails = model.Company.Emails;
+            company.PhoneNumbers = model.Company.PhoneNumbers;
+            company.RecordLastEditDate = DateTime.Now;
+            company.RecordStatus = RecordStatus.Updated;
+
+            await _companyCollection.ReplaceOneAsync(x => x.Id == application.CompanyId, company, new ReplaceOptions(), cancellationToken);
+
+            var employees = await _employeeCollection.Find(x => x.CompanyId == company.Id).ToListAsync(cancellationToken);
+
+            foreach (var employee in employees)
+            {
+                if (!string.IsNullOrEmpty(employee.PictureId))
+                    await _objectCollection.DeleteOneAsync(x => x.Id == employee.PictureId, cancellationToken);
+
+                await _employeeCollection.DeleteOneAsync(x => x.Id == employee.Id, cancellationToken);
+            }
+            foreach (var employee in model.Employees)
+            {
+                var newEmployee = new Domain.Employee()
+                {
+                    RecordInsertDate = DateTime.Now,
+                    RecordLastEditDate = DateTime.Now,
+                    RecordStatus = RecordStatus.Inserted,
+                    CompanyId = company.Id,
+                    CreatorAccountId = accountId,
+                    Email = employee.Email,
+                    Name = employee.Name,
+                    PhoneNumber = employee.PhoneNumber,
+                    PictureId = employee.PictureId,
+                    ProfileUrl = employee.ProfileUrl,
+                    RoleId = employee.RoleId
+                };
+
+                await _employeeCollection.InsertOneAsync(newEmployee, new InsertOneOptions(), cancellationToken);
+            }
+
+            await _objectCollection.DeleteOneAsync(x => x.Id == application.ResumeId, cancellationToken);
+            await _objectCollection.DeleteOneAsync(x => x.Id == application.CoverLetterId, cancellationToken);
+
+            application.Salary = model.Salary;
+            application.ApplySource = model.ApplySource;
+            application.CoverLetterId = model.CoverLetterId;
+            application.ResumeId = model.ResumeId;
+            application.RecordLastEditDate = DateTime.Now;
+            application.RecordStatus = RecordStatus.Updated;
+
+            await _applicationCollection.ReplaceOneAsync(x => x.Id == application.Id, application, new ReplaceOptions(), cancellationToken);
+        }
+
+        public async Task<IApplication> GetByIdAsync(string accountId, string id, CancellationToken cancellationToken)
+        {
+            var account = await _accountCollection.Find(x => x.Id == accountId).FirstOrDefaultAsync(cancellationToken);
+            if (account == null)
+                throw new ValidationException("100", "Account not found.");
+
+            var application = await _applicationCollection.Find(x => x.Id == id).FirstOrDefaultAsync(cancellationToken);
+            if (application == null)
+                throw new ValidationException("100", "Application not found.");
+
+            var company = await _companyCollection.Find(x => x.Id == application.CompanyId).SingleAsync(cancellationToken);
+            var employees = await _employeeCollection.Find(x => x.CompanyId == application.CompanyId).ToListAsync(cancellationToken);
+
+            return ToModel(new[] { application }, new[] { company }, employees).Single();
+        }
+
         public async Task<IDashboardData> GetDashboardDataAsync(string accountId, CancellationToken cancellationToken)
         {
+            var account = await _accountCollection.Find(x => x.Id == accountId).FirstOrDefaultAsync(cancellationToken);
+            if (account == null)
+                throw new ValidationException("100", "Account not found.");
+
             var wishlistQuery = Builders<Domain.Application>.Filter.Where(x => x.StateId == State.Wishlist && x.CreatorAccountId == accountId && x.RecordStatus != RecordStatus.Deleted);
-            var wishlist = await _applicationCollection.Find(wishlistQuery).Limit(_options.CurrentValue.MaximumItemsInDashboard).ToListAsync(cancellationToken);
+            var wishlist = await _applicationCollection.Find(wishlistQuery).ToListAsync(cancellationToken);
             var totalWishlistCount = await _applicationCollection.Find(wishlistQuery).CountDocumentsAsync(cancellationToken);
 
             var appliedQuery = Builders<Domain.Application>.Filter.Where(x => x.StateId == State.Applied && x.CreatorAccountId == accountId && x.RecordStatus != RecordStatus.Deleted);
-            var applied = await _applicationCollection.Find(appliedQuery).Limit(_options.CurrentValue.MaximumItemsInDashboard).ToListAsync(cancellationToken);
+            var applied = await _applicationCollection.Find(appliedQuery).ToListAsync(cancellationToken);
             var totalAppliedCount = await _applicationCollection.Find(appliedQuery).CountDocumentsAsync(cancellationToken);
 
             var interviewQuery = Builders<Domain.Application>.Filter.Where(x => x.StateId == State.Interview && x.CreatorAccountId == accountId && x.RecordStatus != RecordStatus.Deleted);
-            var interview = await _applicationCollection.Find(interviewQuery).Limit(_options.CurrentValue.MaximumItemsInDashboard).ToListAsync(cancellationToken);
+            var interview = await _applicationCollection.Find(interviewQuery).ToListAsync(cancellationToken);
             var totalInterviewCount = await _applicationCollection.Find(interviewQuery).CountDocumentsAsync(cancellationToken);
 
             var offerQuery = Builders<Domain.Application>.Filter.Where(x => x.StateId == State.Offer && x.CreatorAccountId == accountId && x.RecordStatus != RecordStatus.Deleted);
-            var offer = await _applicationCollection.Find(offerQuery).Limit(_options.CurrentValue.MaximumItemsInDashboard).ToListAsync(cancellationToken);
+            var offer = await _applicationCollection.Find(offerQuery).ToListAsync(cancellationToken);
             var totalOfferCount = await _applicationCollection.Find(offerQuery).CountDocumentsAsync(cancellationToken);
 
             var rejectedQuery = Builders<Domain.Application>.Filter.Where(x => x.StateId == State.Rejected && x.CreatorAccountId == accountId && x.RecordStatus != RecordStatus.Deleted);
@@ -209,6 +323,10 @@ namespace AppStatus.Api.Service.Application
 
         public async Task PatchNotesAsync(string accountId, string id, string notes, CancellationToken cancellationToken)
         {
+            var account = await _accountCollection.Find(x => x.Id == accountId).FirstOrDefaultAsync(cancellationToken);
+            if (account == null)
+                throw new ValidationException("100", "Account not found.");
+
             var filter = Builders<Domain.Application>.Filter.Where(x => x.CreatorAccountId == accountId && x.Id == id && x.RecordStatus != RecordStatus.Deleted);
             var application = await _applicationCollection.Find(filter).FirstOrDefaultAsync(cancellationToken);
             if (application == null)
@@ -221,6 +339,10 @@ namespace AppStatus.Api.Service.Application
 
         public async Task PatchToDoStatusAsync(string accountId, string id, string[] toDoIds, CancellationToken cancellationToken)
         {
+            var account = await _accountCollection.Find(x => x.Id == accountId).FirstOrDefaultAsync(cancellationToken);
+            if (account == null)
+                throw new ValidationException("100", "Account not found.");
+
             var filter = Builders<Domain.Application>.Filter.Where(x => x.CreatorAccountId == accountId && x.Id == id && x.RecordStatus != RecordStatus.Deleted);
             var application = await _applicationCollection.Find(filter).FirstOrDefaultAsync(cancellationToken);
             if (application == null)
@@ -237,6 +359,10 @@ namespace AppStatus.Api.Service.Application
 
         public async Task CreateToDoAsync(string accountId, string id, string title, CancellationToken cancellationToken)
         {
+            var account = await _accountCollection.Find(x => x.Id == accountId).FirstOrDefaultAsync(cancellationToken);
+            if (account == null)
+                throw new ValidationException("100", "Account not found.");
+
             var filter = Builders<Domain.Application>.Filter.Where(x => x.CreatorAccountId == accountId && x.Id == id && x.RecordStatus != RecordStatus.Deleted);
             var application = await _applicationCollection.Find(filter).FirstOrDefaultAsync(cancellationToken);
             if (application == null)
@@ -257,6 +383,10 @@ namespace AppStatus.Api.Service.Application
 
         public async Task CreateAndPatchToDoAsync(string accountId, string id, string title, string[] toDoIds, CancellationToken cancellationToken)
         {
+            var account = await _accountCollection.Find(x => x.Id == accountId).FirstOrDefaultAsync(cancellationToken);
+            if (account == null)
+                throw new ValidationException("100", "Account not found.");
+
             var filter = Builders<Domain.Application>.Filter.Where(x => x.CreatorAccountId == accountId && x.Id == id && x.RecordStatus != RecordStatus.Deleted);
             var application = await _applicationCollection.Find(filter).FirstOrDefaultAsync(cancellationToken);
             if (application == null)
@@ -289,6 +419,10 @@ namespace AppStatus.Api.Service.Application
 
         public async Task PatchStateAsync(string accountId, string id, short stateId, string logMessage, CancellationToken cancellationToken)
         {
+            var account = await _accountCollection.Find(x => x.Id == accountId).FirstOrDefaultAsync(cancellationToken);
+            if (account == null)
+                throw new ValidationException("100", "Account not found.");
+
             var filter = Builders<Domain.Application>.Filter.Where(x => x.CreatorAccountId == accountId && x.Id == id && x.RecordStatus != RecordStatus.Deleted);
             var application = await _applicationCollection.Find(filter).FirstOrDefaultAsync(cancellationToken);
             if (application == null)
@@ -318,6 +452,10 @@ namespace AppStatus.Api.Service.Application
 
         public async Task DeleteAsync(string accountId, string id, CancellationToken cancellationToken)
         {
+            var account = await _accountCollection.Find(x => x.Id == accountId).FirstOrDefaultAsync(cancellationToken);
+            if (account == null)
+                throw new ValidationException("100", "Account not found.");
+
             var filter = Builders<Domain.Application>.Filter.Where(x => x.CreatorAccountId == accountId && x.Id == id && x.RecordStatus != RecordStatus.Deleted);
             var application = await _applicationCollection.Find(filter).FirstOrDefaultAsync(cancellationToken);
             if (application == null)

@@ -17,6 +17,7 @@ namespace AppStatus.Api.Service.Object
     public class ObjectService : IObjectService
     {
         private readonly IMongoCollection<Domain.Object> _objectCollection;
+        private readonly IMongoCollection<Domain.Account> _accountCollection;
 
         public ObjectService(IOptionsMonitor<ApplicationOptions> options)
         {
@@ -27,10 +28,15 @@ namespace AppStatus.Api.Service.Object
                 options.CurrentValue.DatabaseName);
 
             _objectCollection = mongoDatabase.GetCollection<Domain.Object>("Object");
+            _accountCollection = mongoDatabase.GetCollection<Domain.Account>("Account");
         }
 
         public async Task<IObject> GetByIdAsync(string accountId, string id, CancellationToken cancellationToken)
         {
+            var account = await _accountCollection.Find(x => x.Id == accountId).FirstOrDefaultAsync(cancellationToken);
+            if (account == null)
+                throw new ValidationException("100", "Account not found.");
+
             var @object = await _objectCollection.Find(x => x.CreatorAccountId == accountId && x.Id == id).FirstOrDefaultAsync(cancellationToken);
             if (@object == null)
                 throw new ValidationException("100", "Object not found.");
@@ -40,6 +46,10 @@ namespace AppStatus.Api.Service.Object
 
         public async Task<string> CreateAsync(string accountId, byte[] content, string contentType, string hash, CancellationToken cancellationToken)
         {
+            var account = await _accountCollection.Find(x => x.Id == accountId).FirstOrDefaultAsync(cancellationToken);
+            if (account == null)
+                throw new ValidationException("100", "Account not found.");
+
             var @object = await _objectCollection.Find(x => x.Hash == hash).FirstOrDefaultAsync(cancellationToken);
             if (@object != null)
                 return @object.Id;

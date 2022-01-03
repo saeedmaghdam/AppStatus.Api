@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using AppStatus.Api.Framework;
 using AppStatus.Api.Framework.Constants;
+using AppStatus.Api.Framework.Exceptions;
 using AppStatus.Api.Framework.Services.Company;
 using AppStatus.Api.Service.Company.Models;
 using Microsoft.Extensions.Options;
@@ -14,6 +15,7 @@ namespace AppStatus.Api.Service.Company
     public class CompanyService : ICompanyService
     {
         private readonly IMongoCollection<Domain.Company> _companyCollection;
+        private readonly IMongoCollection<Domain.Account> _accountCollection;
 
         public CompanyService(IOptionsMonitor<ApplicationOptions> options)
         {
@@ -24,6 +26,7 @@ namespace AppStatus.Api.Service.Company
                 options.CurrentValue.DatabaseName);
 
             _companyCollection = mongoDatabase.GetCollection<Domain.Company>("Company");
+            _accountCollection = mongoDatabase.GetCollection<Domain.Account>("Account");
         }
 
         public async Task<IEnumerable<ICompany>> GetAsync(CancellationToken cancellationToken)
@@ -35,6 +38,10 @@ namespace AppStatus.Api.Service.Company
 
         public async Task<IEnumerable<ICompany>> GetByIdsAsync(string accountId, string[] ids, CancellationToken cancellationToken)
         {
+            var account = await _accountCollection.Find(x => x.Id == accountId).FirstOrDefaultAsync(cancellationToken);
+            if (account == null)
+                throw new ValidationException("100", "Account not found.");
+
             var result = await _companyCollection.Find(x=> x.CreatorAccountId == accountId && ids.Contains(x.Id) && x.RecordStatus != RecordStatus.Deleted).ToListAsync(cancellationToken);
 
             return ToModel(result);
@@ -42,6 +49,10 @@ namespace AppStatus.Api.Service.Company
 
         public async Task<string> CreateAsync(string accountId, string name, string url, string[] emails, string[] phoneNumbers, string address, CancellationToken cancellationToken)
         {
+            var account = await _accountCollection.Find(x => x.Id == accountId).FirstOrDefaultAsync(cancellationToken);
+            if (account == null)
+                throw new ValidationException("100", "Account not found.");
+
             var company = new Domain.Company()
             {
                 RecordInsertDate = System.DateTime.Now,
