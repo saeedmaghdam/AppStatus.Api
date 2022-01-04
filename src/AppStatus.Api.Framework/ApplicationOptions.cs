@@ -11,5 +11,6 @@
         public string NotificationProfileId { get; set; }
         public string NotificationMessageId { get; set; }
         public string NotificationParameterName { get; set; }
+        public long MaximumUploadSizeInBytes { get; set; }
     }
 }

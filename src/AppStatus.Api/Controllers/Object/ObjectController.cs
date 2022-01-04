@@ -5,11 +5,13 @@ using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using AppStatus.Api.Controllers.Object.InputModels;
+using AppStatus.Api.Framework;
 using AppStatus.Api.Framework.Exceptions;
 using AppStatus.Api.Framework.Services.Object;
 using AppStatus.Api.Shared;
 using AppStatus.Api.ViewModels;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace AppStatus.Api.Controllers.Object
 {
@@ -19,12 +21,14 @@ namespace AppStatus.Api.Controllers.Object
     public class ObjectController : ApiControllerBase
     {
         private readonly IObjectService _objectService;
+        private readonly IOptionsMonitor<ApplicationOptions> _options;
 
         private static readonly string[] VALID_FILE_TYPES = { "application/pdf", "image/bmp", "image/png", "image/jpeg" };
 
-        public ObjectController(IObjectService objectService)
+        public ObjectController(IObjectService objectService, IOptionsMonitor<ApplicationOptions> options)
         {
             _objectService = objectService;
+            _options = options;
         }
 
         [HttpPost]
@@ -32,6 +36,9 @@ namespace AppStatus.Api.Controllers.Object
         {
             if (model.File.Length > 0)
             {
+                if (model.File.Length > _options.CurrentValue.MaximumUploadSizeInBytes)
+                    throw new ValidationException("100", $"Upload maximum size is exceeded. Maximum object size is {_options.CurrentValue.MaximumUploadSizeInBytes / 1024} Kb");
+
                 if (!VALID_FILE_TYPES.Contains(model.File.ContentType.ToLower()))
                     throw new ValidationException("100", "Unsupported file type.");
 
