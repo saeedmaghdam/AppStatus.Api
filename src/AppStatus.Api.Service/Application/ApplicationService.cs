@@ -200,7 +200,7 @@ namespace AppStatus.Api.Service.Application
 
             foreach (var employee in employees)
             {
-                if (!string.IsNullOrEmpty(employee.PictureId))
+                if (!string.IsNullOrEmpty(employee.PictureId) && !model.Employees.Where(x => x.PictureId == employee.PictureId).Any())
                     await _objectCollection.DeleteOneAsync(x => x.Id == employee.PictureId, cancellationToken);
 
                 await _employeeCollection.DeleteOneAsync(x => x.Id == employee.Id, cancellationToken);
@@ -225,8 +225,11 @@ namespace AppStatus.Api.Service.Application
                 await _employeeCollection.InsertOneAsync(newEmployee, new InsertOneOptions(), cancellationToken);
             }
 
-            await _objectCollection.DeleteOneAsync(x => x.Id == application.ResumeId, cancellationToken);
-            await _objectCollection.DeleteOneAsync(x => x.Id == application.CoverLetterId, cancellationToken);
+            if (!string.IsNullOrEmpty(application.ResumeId) && application.ResumeId != model.ResumeId)
+                await _objectCollection.DeleteOneAsync(x => x.Id == application.ResumeId, cancellationToken);
+
+            if (!string.IsNullOrEmpty(application.CoverLetterId) && application.CoverLetterId != model.CoverLetterId)
+                await _objectCollection.DeleteOneAsync(x => x.Id == application.CoverLetterId, cancellationToken);
 
             application.Salary = model.Salary;
             application.ApplySource = model.ApplySource;
