@@ -42,6 +42,8 @@ namespace AppStatus.Api
             services.AddAuthentication(x => { x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme; }).AddJwtBearer();
 
             services.AddSingleton<RecaptchaV3ValidationAttribute>();
+
+            services.AddResponseCaching();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -66,6 +68,8 @@ namespace AppStatus.Api
             app.UseMiddleware<AuthenticatorMiddleware>();
 
             app.UseHttpsRedirection();
+
+            app.UseResponseCaching();
 
             app.UseRouting();
             app.UseAuthentication();

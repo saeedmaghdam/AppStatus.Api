@@ -63,6 +63,7 @@ namespace AppStatus.Api.Controllers.Object
         }
 
         [HttpGet("{id}")]
+        [ResponseCache(Duration = 31536000, Location = ResponseCacheLocation.Any)]
         public async Task<FileResult> DownloadAsync([FromRoute] string id, CancellationToken cancellationToken)
         {
             var fileToRetrieve = await _objectService.GetByIdAsync(UserSession.AccountId, id, cancellationToken);
