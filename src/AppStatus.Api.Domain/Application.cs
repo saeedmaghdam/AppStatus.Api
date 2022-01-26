@@ -85,6 +85,12 @@ namespace AppStatus.Api.Domain
             get;
             set;
         }
+
+        public DateTime LogDateTime
+        {
+            get;
+            set;
+        }
     }
 
     public class ApplicationToDoItem : Identify

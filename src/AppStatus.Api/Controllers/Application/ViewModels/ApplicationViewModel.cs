@@ -132,7 +132,8 @@ namespace AppStatus.Api.Controllers.Application.ViewModels
                 {
                     Description = x.Description,
                     Id = x.Id,
-                    RecordInsertDate = x.RecordInsertDate
+                    RecordInsertDate = x.RecordInsertDate,
+                    LogDateTime = x.LogDateTime
                 }),
                 ToDo = x.ToDo == null ? null : x.ToDo.Select(x => new ApplicationToDoItemViewModel()
                 {
@@ -156,6 +157,12 @@ namespace AppStatus.Api.Controllers.Application.ViewModels
         }
 
         public DateTime RecordInsertDate
+        {
+            get;
+            set;
+        }
+
+        public DateTime LogDateTime
         {
             get;
             set;

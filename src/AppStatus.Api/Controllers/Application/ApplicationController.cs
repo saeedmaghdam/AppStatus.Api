@@ -155,7 +155,7 @@ namespace AppStatus.Api.Controllers.Application
         [HttpPatch("{id}/state")]
         public async Task PatchStateAsync([FromRoute] string id, [FromBody] PathStateInputModel model, CancellationToken cancellationToken)
         {
-            await _applicationService.PatchStateAsync(UserSession.AccountId, id, model.StateId, model.LogMessage, cancellationToken);
+            await _applicationService.PatchStateAsync(UserSession.AccountId, id, model.StateId, model.LogMessage, model.DateTime, cancellationToken);
         }
 
         [HttpDelete("{id}")]

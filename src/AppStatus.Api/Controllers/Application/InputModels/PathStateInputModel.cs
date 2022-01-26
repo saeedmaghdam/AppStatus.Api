@@ -1,4 +1,6 @@
-﻿namespace AppStatus.Api.Controllers.Application.InputModels
+﻿using System;
+
+namespace AppStatus.Api.Controllers.Application.InputModels
 {
     public class PathStateInputModel
     {
@@ -9,6 +11,12 @@
         }
 
         public string LogMessage
+        {
+            get;
+            set;
+        }
+
+        public DateTime DateTime
         {
             get;
             set;

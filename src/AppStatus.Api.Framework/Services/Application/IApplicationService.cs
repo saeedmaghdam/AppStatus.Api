@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace AppStatus.Api.Framework.Services.Application
@@ -21,7 +22,7 @@ namespace AppStatus.Api.Framework.Services.Application
 
         Task CreateAndPatchToDoAsync(string accountId, string id, string title, string[] toDoIds, CancellationToken cancellationToken);
 
-        Task PatchStateAsync(string accountId, string id, short stateId, string logMessage, CancellationToken cancellationToken);
+        Task PatchStateAsync(string accountId, string id, short stateId, string logMessage, DateTime dateTime, CancellationToken cancellationToken);
 
         Task DeleteAsync(string accountId, string id, CancellationToken cancellationToken);
     }

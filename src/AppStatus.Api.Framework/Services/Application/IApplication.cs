@@ -88,6 +88,12 @@ namespace AppStatus.Api.Framework.Services.Application
             set;
         }
 
+        public DateTime LogDateTime
+        {
+            get;
+            set;
+        }
+
         public string Description
         {
             get;

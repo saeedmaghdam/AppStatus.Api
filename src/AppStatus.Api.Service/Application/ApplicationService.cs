@@ -420,7 +420,7 @@ namespace AppStatus.Api.Service.Application
             await _applicationCollection.ReplaceOneAsync(filter, application, new ReplaceOptions(), cancellationToken);
         }
 
-        public async Task PatchStateAsync(string accountId, string id, short stateId, string logMessage, CancellationToken cancellationToken)
+        public async Task PatchStateAsync(string accountId, string id, short stateId, string logMessage, DateTime dateTime, CancellationToken cancellationToken)
         {
             var account = await _accountCollection.Find(x => x.Id == accountId).FirstOrDefaultAsync(cancellationToken);
             if (account == null)
@@ -441,11 +441,7 @@ namespace AppStatus.Api.Service.Application
 
             if (newLogMessage.Any())
             {
-                application.History.Add(new Domain.ApplicationHistoryItem()
-                {
-                    Description = string.Join(" - ", newLogMessage),
-                    RecordInsertDate = DateTime.Now
-                });
+                application.History.Add(new Domain.ApplicationHistoryItem() { Description = string.Join(" - ", newLogMessage), RecordInsertDate = DateTime.Now, LogDateTime = dateTime });
 
                 application.StateId = stateId;
 
@@ -487,9 +483,10 @@ namespace AppStatus.Api.Service.Application
                 ResumeId = application.ResumeId,
                 State = State.ToString(application.StateId),
                 StateId = application.StateId,
-                History = application.History == null ? null : application.History.OrderByDescending(x => x.RecordInsertDate).Select(x => new ApplicationHistoryItemModel()
+                History = application.History == null ? null : application.History.OrderByDescending(x => x.LogDateTime).Select(x => new ApplicationHistoryItemModel()
                 {
                     RecordInsertDate = x.RecordInsertDate,
+                    LogDateTime = x.LogDateTime,
                     Description = x.Description,
                     Id = x.Id
                 }),
