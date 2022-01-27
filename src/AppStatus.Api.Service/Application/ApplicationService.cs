@@ -136,7 +136,7 @@ namespace AppStatus.Api.Service.Application
                 CoverLetterId = model.CoverLetterId,
                 CreatorAccountId = accountId,
                 ResumeId = model.ResumeId,
-                History = new List<Domain.ApplicationHistoryItem>() { new Domain.ApplicationHistoryItem() { Description = State.ToString(model.StateId), RecordInsertDate = DateTime.Now } },
+                History = new List<Domain.ApplicationHistoryItem>() { new Domain.ApplicationHistoryItem() { Description = State.ToString(model.StateId), RecordInsertDate = DateTime.Now, LogDateTime = DateTime.Now } },
                 ToDo = model.ToDo == null ? new List<Domain.ApplicationToDoItem>() : model.ToDo.Select(x => new Domain.ApplicationToDoItem()
                 {
                     Title = x,
